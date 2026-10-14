@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HackerRank Leaderboard Scraper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <!-- Clean SVG Logo (Teal & White Podiums on Solid Black) -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 20H21" stroke="#0d9488" stroke-width="2" stroke-linecap="round"/>
+            <rect x="4.5" y="12" width="4" height="8" rx="1" fill="#14b8a6"/>
+            <rect x="10" y="6" width="4" height="14" rx="1" fill="#ffffff"/>
+            <rect x="15.5" y="14" width="4" height="6" rx="1" fill="#0d9488"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="title">Leaderboard</span>
+          <span class="subtitle">HackerRank Scraper</span>
+        </div>
+      </div>
+      <div class="badge" id="statusBadge">Ready</div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel" id="infoPanel">
+      <div class="info-row">
+        <span class="info-label">Halaman</span>
+        <span class="info-value" id="pageType">Mendeteksi...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Kontes</span>
+        <span class="info-value" id="contestName">—</span>
+      </div>
+    </div>
+
+    <!-- Limit Selector -->
+    <div class="config-section">
+      <label class="config-label">Jumlah Peserta (limit)</label>
+      <div class="select-wrapper">
+        <select id="limitSelect">
+          <option value="50">50 peserta</option>
+          <option value="100" selected>100 peserta</option>
+          <option value="200">200 peserta</option>
+          <option value="500">500 peserta</option>
+          <option value="1000">1000 peserta</option>
+        </select>
+        <svg class="select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9L12 15L18 9" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="options-section">
+      <label class="toggle-row" for="fetchRealName">
+        <div class="toggle-info">
+          <span class="toggle-label">Ambil Real Name</span>
+          <span class="toggle-desc">Fetch profil tiap peserta (lebih lambat)</span>
+        </div>
+        <div class="toggle-switch">
+          <input type="checkbox" id="fetchRealName" checked />
+          <span class="slider"></span>
+        </div>
+      </label>
+    </div>
+
+    <!-- Progress Area -->
+    <div class="progress-area" id="progressArea" style="display:none;">
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText">Memuat data...</div>
+    </div>
+
+    <!-- Log Area -->
+    <div class="log-area" id="logArea">
+      <div class="log-entry info">
+        <span class="log-dot"></span>
+        <span>Buka halaman HackerRank untuk memulai.</span>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <button class="btn-scrape" id="btnScrape" disabled>
+      <span class="btn-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span id="btnText">Download Leaderboard</span>
+    </button>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>v1.0.0</span>
+      <span>•</span>
+      <span>HackerRank Scraper</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
