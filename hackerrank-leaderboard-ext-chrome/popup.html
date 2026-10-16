@@ -8,14 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="popup.css" />
+  <link rel="stylesheet" href="popup-components.css" />
+  <link rel="stylesheet" href="popup-audit.css" />
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
     <div class="header">
       <div class="logo">
         <div class="logo-icon">
-          <!-- Clean SVG Logo (Teal & White Podiums on Solid Black) -->
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 20H21" stroke="#0d9488" stroke-width="2" stroke-linecap="round"/>
             <rect x="4.5" y="12" width="4" height="8" rx="1" fill="#14b8a6"/>
@@ -30,8 +30,6 @@
       </div>
       <div class="badge" id="statusBadge">Ready</div>
     </div>
-
-    <!-- Info Panel -->
     <div class="info-panel" id="infoPanel">
       <div class="info-row">
         <span class="info-label">Halaman</span>
@@ -42,8 +40,18 @@
         <span class="info-value" id="contestName">—</span>
       </div>
     </div>
-
-    <!-- Limit Selector -->
+    <div class="config-section">
+      <label class="config-label">Mode scrape</label>
+      <div class="select-wrapper">
+        <select id="modeSelect">
+          <option value="leaderboard">Leaderboard saja</option>
+          <option value="submissions" selected>Submission + audit</option>
+        </select>
+        <svg class="select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9L12 15L18 9" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
     <div class="config-section">
       <label class="config-label">Jumlah Peserta (limit)</label>
       <div class="select-wrapper">
@@ -59,8 +67,10 @@
         </svg>
       </div>
     </div>
-
-    <!-- Options -->
+    <div class="config-section">
+      <label class="config-label">Filter soal (opsional)</label>
+      <input id="challengeFilter" class="text-input" type="text" placeholder="mis. array-sorting" />
+    </div>
     <div class="options-section">
       <label class="toggle-row" for="fetchRealName">
         <div class="toggle-info">
@@ -72,42 +82,48 @@
           <span class="slider"></span>
         </div>
       </label>
+      <label class="toggle-row" for="includeCode">
+        <div class="toggle-info">
+          <span class="toggle-label">Sertakan Kode</span>
+          <span class="toggle-desc">Unduh source tiap submission (audit)</span>
+        </div>
+        <div class="toggle-switch">
+          <input type="checkbox" id="includeCode" checked />
+          <span class="slider"></span>
+        </div>
+      </label>
     </div>
-
-    <!-- Progress Area -->
     <div class="progress-area" id="progressArea" style="display:none;">
       <div class="progress-bar-wrapper">
         <div class="progress-bar" id="progressBar"></div>
       </div>
       <div class="progress-text" id="progressText">Memuat data...</div>
     </div>
-
-    <!-- Log Area -->
     <div class="log-area" id="logArea">
       <div class="log-entry info">
         <span class="log-dot"></span>
         <span>Buka halaman HackerRank untuk memulai.</span>
       </div>
     </div>
-
-    <!-- Action Button -->
     <button class="btn-scrape" id="btnScrape" disabled>
       <span class="btn-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </span>
-      <span id="btnText">Download Leaderboard</span>
+      <span id="btnText">Download</span>
     </button>
-
-    <!-- Footer -->
     <div class="footer">
-      <span>v1.0.0</span>
+      <span>v1.1.0</span>
       <span>•</span>
       <span>HackerRank Scraper</span>
     </div>
   </div>
-
+  <script src="lib/ui.js"></script>
+  <script src="lib/audit.js"></script>
+  <script src="lib/download.js"></script>
+  <script src="injected/leaderboard.js"></script>
+  <script src="injected/submissions.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
