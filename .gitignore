@@ -1,0 +1,28 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Node / NPM
+node_modules/
+npm-debug.log*
+
+# Scraped output & audit artifacts (temporary test files)
+*_submissions_audit.json
+*_rekap_audit.csv
+*_leaderboard_clean.json
+scratch/

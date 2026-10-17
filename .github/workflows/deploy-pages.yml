@@ -1,0 +1,59 @@
+name: Deploy Dashboard to GitHub Pages & Package Extensions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  # Job 1: Package Extensions into downloadable ZIP files
+  package-extensions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create ZIP Archives for Extensions
+        run: |
+          mkdir -p dist
+          zip -r dist/hackerrank-scrapper-chrome.zip hackerrank-leaderboard-ext-chrome/
+          zip -r dist/hackerrank-scrapper-firefox.zip hackerrank-leaderboard-ext-firefox/
+
+      - name: Upload Extension Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-extensions
+          path: dist/*.zip
+          retention-days: 90
+
+  # Job 2: Deploy Frontend to GitHub Pages
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
