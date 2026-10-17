@@ -19,6 +19,23 @@ document.addEventListener("DOMContentLoaded", function () {
   var jsonFileInput = document.getElementById("jsonFileInput");
   var dashboardCard = document.getElementById("demo");
 
+  // Pagination Elements (10 items per page)
+  var currentPage = 1;
+  var PAGE_SIZE = 10;
+  var tablePaginationEl = document.getElementById("tablePagination");
+  var paginationInfoEl = document.getElementById("paginationInfo");
+  var paginationNumbersEl = document.getElementById("paginationNumbers");
+  var btnPagePrev = document.getElementById("btnPagePrev");
+  var btnPageNext = document.getElementById("btnPageNext");
+
+  // Apple HIG Custom Select Elements
+  var studentDropdownWrapper = document.getElementById("studentDropdownWrapper");
+  var studentDropdownTrigger = document.getElementById("studentDropdownTrigger");
+  var studentDropdownLabel = document.getElementById("studentDropdownLabel");
+  var studentDropdownMenu = document.getElementById("studentDropdownMenu");
+  var studentSearchInput = document.getElementById("studentSearchInput");
+  var studentDropdownList = document.getElementById("studentDropdownList");
+
   // Modal Elements
   var modal = document.getElementById("codeModal");
   var btnCloseModal = document.getElementById("btnCloseModal");
@@ -311,6 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     activePayload = normalized;
+    currentPage = 1;
 
     if (saveToStorage !== false) {
       try {
@@ -367,7 +385,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // -------------------------------------------------------------
-  // Render Tabel Mahasiswa UTS
+  // -------------------------------------------------------------
+  // Render Tabel Mahasiswa UTS (Dengan Pagination 10 Item/Halaman)
   // -------------------------------------------------------------
   function renderTable() {
     if (!tableBodyEl || !activePayload) return;
@@ -384,7 +403,12 @@ document.addEventListener("DOMContentLoaded", function () {
       return matchesFilter && matchesSearch;
     });
 
-    if (filtered.length === 0) {
+    var totalItems = filtered.length;
+    var totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    if (totalItems === 0) {
       var emptyTr = document.createElement("tr");
       emptyTr.innerHTML =
         '<td colspan="7" style="text-align:center; padding: 32px; color: var(--ink-tertiary);">' +
@@ -392,10 +416,15 @@ document.addEventListener("DOMContentLoaded", function () {
         '<span style="font-size: 11px;">Impor file <code>*_submissions_audit.json</code> untuk melihat data kontes UTS asli Anda.</span>' +
         '</td>';
       tableBodyEl.appendChild(emptyTr);
+      renderPagination(0, 1, 0, 0);
       return;
     }
 
-    filtered.forEach(function (s) {
+    var startIndex = (currentPage - 1) * PAGE_SIZE;
+    var endIndex = Math.min(startIndex + PAGE_SIZE, totalItems);
+    var pageItems = filtered.slice(startIndex, endIndex);
+
+    pageItems.forEach(function (s) {
       var tr = document.createElement("tr");
       var status = (s.audit && s.audit.status) || "BELUM_LULUS";
       var statusClass = "belum";
@@ -451,6 +480,100 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       });
+    });
+
+    renderPagination(totalItems, totalPages, startIndex, endIndex);
+  }
+
+  // -------------------------------------------------------------
+  // Render Kontrol Pagination (Apple HIG Style)
+  // -------------------------------------------------------------
+  function renderPagination(totalItems, totalPages, startIndex, endIndex) {
+    if (!tablePaginationEl) return;
+
+    if (totalItems === 0) {
+      if (paginationInfoEl) paginationInfoEl.innerHTML = "Menampilkan <b>0</b> mahasiswa";
+      if (btnPagePrev) btnPagePrev.disabled = true;
+      if (btnPageNext) btnPageNext.disabled = true;
+      if (paginationNumbersEl) paginationNumbersEl.innerHTML = "";
+      return;
+    }
+
+    if (paginationInfoEl) {
+      paginationInfoEl.innerHTML =
+        'Menampilkan <b>' + (startIndex + 1) + '–' + endIndex + '</b> dari <b>' + totalItems + '</b> mahasiswa';
+    }
+
+    if (btnPagePrev) btnPagePrev.disabled = (currentPage <= 1);
+    if (btnPageNext) btnPageNext.disabled = (currentPage >= totalPages);
+
+    if (paginationNumbersEl) {
+      paginationNumbersEl.innerHTML = "";
+
+      // Hasilkan daftar nomor halaman dengan elipsis jika totalPages > 7
+      var pages = [];
+      if (totalPages <= 7) {
+        for (var i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        if (currentPage <= 4) {
+          pages = [1, 2, 3, 4, 5, "...", totalPages];
+        } else if (currentPage >= totalPages - 3) {
+          pages = [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        } else {
+          pages = [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+        }
+      }
+
+      pages.forEach(function (p) {
+        if (p === "...") {
+          var ellipsis = document.createElement("span");
+          ellipsis.className = "pagination-ellipsis";
+          ellipsis.textContent = "…";
+          paginationNumbersEl.appendChild(ellipsis);
+        } else {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-page-num" + (p === currentPage ? " active" : "");
+          btn.textContent = p;
+          btn.setAttribute("aria-label", "Halaman " + p);
+          btn.addEventListener("click", function () {
+            if (currentPage !== p) {
+              currentPage = p;
+              renderTable();
+            }
+          });
+          paginationNumbersEl.appendChild(btn);
+        }
+      });
+    }
+  }
+
+  if (btnPagePrev) {
+    btnPagePrev.addEventListener("click", function () {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+      }
+    });
+  }
+
+  if (btnPageNext) {
+    btnPageNext.addEventListener("click", function () {
+      if (!activePayload) return;
+      var totalItems = (activePayload.students || []).filter(function (s) {
+        var status = (s.audit && s.audit.status) || "";
+        var matchesFilter = currentFilter === "all" || status === currentFilter;
+        var matchesSearch =
+          (s.real_name || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          (s.username || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          status.toLowerCase().includes(searchKeyword.toLowerCase());
+        return matchesFilter && matchesSearch;
+      }).length;
+      var totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+      }
     });
   }
 
@@ -643,6 +766,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (filterInputEl) {
     filterInputEl.addEventListener("input", function (e) {
       searchKeyword = e.target.value.trim();
+      currentPage = 1;
       renderTable();
     });
   }
@@ -652,6 +776,7 @@ document.addEventListener("DOMContentLoaded", function () {
       filterPills.forEach(function (p) { p.classList.remove("active"); });
       pill.classList.add("active");
       currentFilter = pill.getAttribute("data-filter");
+      currentPage = 1;
       renderTable();
     });
   });
@@ -800,30 +925,180 @@ document.addEventListener("DOMContentLoaded", function () {
   var activeInspectorCode = "";
 
   function populateStudentDropdown() {
-    if (!inspectorStudentSelect || !activePayload) return;
+    if (!activePayload) return;
     var students = activePayload.students || [];
-    inspectorStudentSelect.innerHTML = "";
 
-    students.forEach(function (s) {
-      var opt = document.createElement("option");
-      opt.value = s.username;
-      opt.textContent = "#" + s.rank + " - " + (s.real_name || s.username) + " (@" + s.username + ") — " + s.total_score + " pts";
-      inspectorStudentSelect.appendChild(opt);
-    });
+    // Sinkronisasi native hidden select untuk kompatibilitas form
+    if (inspectorStudentSelect) {
+      inspectorStudentSelect.innerHTML = "";
+      students.forEach(function (s) {
+        var opt = document.createElement("option");
+        opt.value = s.username;
+        opt.textContent = "#" + s.rank + " - " + (s.real_name || s.username) + " (@" + s.username + ") — " + s.total_score + " pts";
+        inspectorStudentSelect.appendChild(opt);
+      });
+    }
 
     if (!currentInspectorUser && students.length > 0) {
       currentInspectorUser = students[0].username;
     }
-    if (currentInspectorUser) {
+    if (currentInspectorUser && inspectorStudentSelect) {
       inspectorStudentSelect.value = currentInspectorUser;
     }
+
+    renderCustomDropdownList("");
+    updateDropdownTriggerLabel();
   }
+
+  function updateDropdownTriggerLabel() {
+    if (!studentDropdownLabel || !activePayload) return;
+    var students = activePayload.students || [];
+    var student = students.find(function (s) { return s.username === currentInspectorUser; });
+    if (student) {
+      studentDropdownLabel.textContent =
+        "#" + student.rank + " - " + (student.real_name || student.username) + " (@" + student.username + ") — " + student.total_score + " pts";
+    } else {
+      studentDropdownLabel.textContent = "Pilih Mahasiswa...";
+    }
+  }
+
+  function renderCustomDropdownList(searchQuery) {
+    if (!studentDropdownList || !activePayload) return;
+    studentDropdownList.innerHTML = "";
+    var students = activePayload.students || [];
+    var q = (searchQuery || "").toLowerCase().trim();
+
+    var filtered = students.filter(function (s) {
+      if (!q) return true;
+      var name = (s.real_name || "").toLowerCase();
+      var user = (s.username || "").toLowerCase();
+      var rank = String(s.rank);
+      return name.includes(q) || user.includes(q) || rank.includes(q);
+    });
+
+    if (filtered.length === 0) {
+      var emptyEl = document.createElement("div");
+      emptyEl.style.padding = "14px 10px";
+      emptyEl.style.textAlign = "center";
+      emptyEl.style.fontSize = "12px";
+      emptyEl.style.color = "var(--ink-tertiary)";
+      emptyEl.textContent = "Tidak ditemukan mahasiswa yang cocok.";
+      studentDropdownList.appendChild(emptyEl);
+      return;
+    }
+
+    filtered.forEach(function (s) {
+      var item = document.createElement("div");
+      var isSelected = (s.username === currentInspectorUser);
+      item.className = "apple-select-item" + (isSelected ? " selected" : "");
+      item.setAttribute("role", "option");
+      item.setAttribute("data-value", s.username);
+      item.setAttribute("aria-selected", isSelected ? "true" : "false");
+
+      item.innerHTML =
+        '<div class="item-left">' +
+          '<span class="item-rank">#' + s.rank + '</span>' +
+          '<div class="item-info">' +
+            '<span class="item-name">' + escapeHtml(s.real_name || s.username) + '</span>' +
+            '<span class="item-user">@' + escapeHtml(s.username) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="item-right">' +
+          '<span class="item-score">' + s.total_score + ' pts</span>' +
+          '<span class="item-check">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+              '<polyline points="20 6 9 17 4 12"/>' +
+            '</svg>' +
+          '</span>' +
+        '</div>';
+
+      item.addEventListener("click", function () {
+        selectStudentInInspector(s.username);
+        closeDropdownMenu();
+      });
+
+      studentDropdownList.appendChild(item);
+    });
+  }
+
+  function toggleDropdownMenu() {
+    if (!studentDropdownMenu) return;
+    var isOpen = studentDropdownMenu.style.display !== "none";
+    if (isOpen) {
+      closeDropdownMenu();
+    } else {
+      openDropdownMenu();
+    }
+  }
+
+  function openDropdownMenu() {
+    if (!studentDropdownMenu) return;
+    studentDropdownMenu.style.display = "flex";
+    if (studentDropdownTrigger) {
+      studentDropdownTrigger.classList.add("active");
+      studentDropdownTrigger.setAttribute("aria-expanded", "true");
+    }
+    if (studentSearchInput) {
+      studentSearchInput.value = "";
+      renderCustomDropdownList("");
+      setTimeout(function () { studentSearchInput.focus(); }, 40);
+    }
+  }
+
+  function closeDropdownMenu() {
+    if (!studentDropdownMenu) return;
+    studentDropdownMenu.style.display = "none";
+    if (studentDropdownTrigger) {
+      studentDropdownTrigger.classList.remove("active");
+      studentDropdownTrigger.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  if (studentDropdownTrigger) {
+    studentDropdownTrigger.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleDropdownMenu();
+    });
+  }
+
+  if (studentSearchInput) {
+    studentSearchInput.addEventListener("input", function (e) {
+      renderCustomDropdownList(e.target.value);
+    });
+    studentSearchInput.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    if (studentDropdownWrapper && !studentDropdownWrapper.contains(e.target)) {
+      closeDropdownMenu();
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeDropdownMenu();
+    }
+  });
 
   function selectStudentInInspector(username) {
     currentInspectorUser = username;
     currentInspectorChallengeIdx = 0;
     if (inspectorStudentSelect) {
       inspectorStudentSelect.value = username;
+    }
+    updateDropdownTriggerLabel();
+    if (studentDropdownList) {
+      studentDropdownList.querySelectorAll(".apple-select-item").forEach(function (el) {
+        if (el.getAttribute("data-value") === username) {
+          el.classList.add("selected");
+          el.setAttribute("aria-selected", "true");
+        } else {
+          el.classList.remove("selected");
+          el.setAttribute("aria-selected", "false");
+        }
+      });
     }
     renderCodeInspector();
   }

@@ -296,6 +296,26 @@
                         </tbody>
                       </table>
                     </div>
+
+                    <!-- Table Pagination Bar (Apple HIG Style) -->
+                    <div class="table-pagination" id="tablePagination">
+                      <div class="pagination-info" id="paginationInfo">
+                        Menampilkan <b>1–10</b> dari <b>10</b> mahasiswa
+                      </div>
+                      <div class="pagination-controls" id="paginationControls">
+                        <button type="button" class="btn-page-nav" id="btnPagePrev" title="Halaman Sebelumnya" disabled>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                          <span>Sebelumnya</span>
+                        </button>
+                        <div class="pagination-pages" id="paginationNumbers">
+                          <!-- Populated dynamically by app.js -->
+                        </div>
+                        <button type="button" class="btn-page-nav" id="btnPageNext" title="Halaman Berikutnya">
+                          <span>Berikutnya</span>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
@@ -309,10 +329,36 @@
                   <!-- Toolbar: Mahasiswa Selector -->
                   <div class="inspector-toolbar">
                     <div class="inspector-student-picker">
-                      <label for="inspectorStudentSelect" style="font-size:12px; font-weight:600; color:var(--ink-secondary);">Pilih Mahasiswa:</label>
-                      <select id="inspectorStudentSelect" class="inspector-select">
-                        <!-- Populated by app.js -->
-                      </select>
+                      <label style="font-size:12px; font-weight:600; color:var(--ink-secondary); white-space:nowrap;">Pilih Mahasiswa:</label>
+                      <div class="apple-select-wrapper" id="studentDropdownWrapper">
+                        <button type="button" class="apple-select-trigger" id="studentDropdownTrigger" aria-haspopup="listbox" aria-expanded="false">
+                          <span class="trigger-label" id="studentDropdownLabel">Memuat mahasiswa...</span>
+                          <span class="trigger-chevron">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="7 15 12 20 17 15"/>
+                              <polyline points="7 9 12 4 17 9"/>
+                            </svg>
+                          </span>
+                        </button>
+
+                        <select id="inspectorStudentSelect" class="inspector-select-hidden" tabindex="-1" aria-hidden="true">
+                          <!-- Populated by app.js -->
+                        </select>
+
+                        <div class="apple-select-menu" id="studentDropdownMenu" role="listbox" style="display: none;">
+                          <div class="apple-select-search-wrap">
+                            <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                              <circle cx="11" cy="11" r="8"/>
+                              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input type="text" id="studentSearchInput" class="apple-select-search" placeholder="Cari nama atau username..." autocomplete="off" />
+                          </div>
+                          <div class="apple-select-list" id="studentDropdownList">
+                            <!-- Rendered dynamically by app.js -->
+                          </div>
+                        </div>
+                      </div>
+
                       <button class="btn-action-sm btn-ghost" id="btnInspectorPrev" title="Mahasiswa Sebelumnya">&larr;</button>
                       <button class="btn-action-sm btn-ghost" id="btnInspectorNext" title="Mahasiswa Berikutnya">&rarr;</button>
                     </div>
