@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "HackerRank Leaderboard Scraper",
   "version": "1.0.0",
-  "description": "Ambil dan download data leaderboard HackerRank dalam format JSON yang bersih.",
+  "description": "Scrape leaderboard dan audit submission (kode, testcase, skor vs bobot) kontes HackerRank.",
   "browser_specific_settings": {
     "gecko": {
       "id": "hackerrank-scraper@leaderboard",

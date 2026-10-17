@@ -47,16 +47,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     logArea.innerHTML = "";
     progArea.style.display = "flex";
     try {
-      if (modeSel.value === "leaderboard") await runLeaderboard(scripting);
+      if (modeSel.value === "leaderboard") await runLeaderboard(scripting, limit);
       else await runSubmissions(scripting, limit);
     } catch (e) { uiLog(logArea, "error", "Error: " + e.message); }
     uiSetBtn(btn, btnText, btnIcon, false, "Download");
   });
-  async function runLeaderboard(scripting) {
+  async function runLeaderboard(scripting, limit) {
     progBar.style.width = "10%";
     progText.textContent = "Menghubungkan ke API HackerRank...";
     var r = await scripting.executeScript({ target: { tabId: tab.id },
-      func: runLeaderboardScraper, args: [slug, 1000, false] });
+      func: runLeaderboardScraper, args: [slug, limit, wantName.checked] });
     var d = r[0].result;
     if (d.error) { uiLog(logArea, "error", d.error); uiSetStatus(badge, "error"); return; }
     progBar.style.width = "100%";
@@ -84,6 +84,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     var sd = sr[0].result;
     if (sd.error) { uiLog(logArea, "error", sd.error); return; }
     var payload = JSON.parse(sd.jsonString);
+    var weights = payload.challenge_weights || {};
+    var totalPossible = 0;
+    Object.keys(weights).forEach(function (k) {
+      totalPossible += weights[k].max_score || 0;
+    });
+    var order = Object.keys(weights);
     var recap = payload.students.map(function (s) {
       var base = names[s.username] || {};
       var au = auditStudent(s.best_per_challenge || []);
@@ -91,23 +97,35 @@ document.addEventListener("DOMContentLoaded", async function () {
       s.real_name = base.real_name || s.username;
       s.rank = base.rank;
       s.total_score = base.score;
+      var obtained = base.score || 0;
+      var scores = {};
+      (s.best_per_challenge || []).forEach(function (b) {
+        scores[b.challenge_slug || b.challenge] = b.score;
+      });
       return { username: s.username, real_name: s.real_name,
-        total_score: base.score || 0, full_solved: au.full_solved_count,
+        total_score: obtained, total_possible: totalPossible,
+        selisih_total: totalPossible > 0 ? totalPossible - obtained : "",
+        scores: scores, full_solved: au.full_solved_count,
         challenge_count: (s.best_per_challenge || []).length,
         flags: au.flags, status: au.status };
     });
-    payload.audit_rule = "LULUS jika >=1 soal full (tc lolos semua / skor maks).";
+    payload.total_possible = totalPossible;
+    payload.audit_rule = "LULUS_UTUH = minimal 1 soal Accepted " +
+      "(semua testcase termasuk hidden lolos). Bobot soal = skor saat " +
+      "diselesaikan utuh; selisih = bobot - skor diperoleh.";
     progBar.style.width = "90%";
     await scripting.executeScript({ target: { tabId: tab.id },
       func: triggerDownload,
       args: [JSON.stringify(payload, null, 2), sd.filename] });
-    downloadText(toRecapCsv(recap),
+    downloadText(toRecapCsv(recap, order),
       (slug || "global") + "_rekap_audit.csv", "text/csv");
     var n = recap.filter(function (x) { return x.status === "LULUS_UTUH"; }).length;
     progBar.style.width = "100%";
-    uiLog(logArea, "success", "Audit " + recap.length + " mhs, lulus utuh: " + n + ".");
+    uiLog(logArea, "success", "Audit " + recap.length + " mahasiswa: " +
+      n + " lulus utuh.");
     var errs = sd.errors || [];
-    if (errs.length) uiLog(logArea, "warn", errs.length + " peserta gagal detail.");
+    if (errs.length) uiLog(logArea, "warn", errs.length + " peserta gagal " +
+      "diambil kodenya (lihat code_errors di JSON).");
     uiSetStatus(badge, "done");
   }
 });
