@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HackerRank Auditor UTS — Penguji Ujian Algoritma &amp; Pemrograman</title>
+  <meta name="description" content="Sistem audit dan scraper otomatis ujian coding HackerRank untuk mata kuliah Algoritma dan Pemrograman. Verifikasi syarat kelulusan LULUS_UTUH, deteksi print-hack, dan ekspor rekap nilai seketika." />
+  
+  <!-- Font Sistem & Modern Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Background Ambient Glow -->
+  <div class="ambient-glow glow-top" aria-hidden="true"></div>
+  <div class="ambient-glow glow-bottom" aria-hidden="true"></div>
+
+  <!-- ========================================================= -->
+  <!-- FLOATING PILL NAVIGATION (Apple HIG Style)                -->
+  <!-- ========================================================= -->
+  <header class="nav-wrapper">
+    <nav class="nav-pill" aria-label="Navigasi Utama">
+      <a href="#" class="nav-brand">
+        <div class="brand-symbol">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M4 19.5V4.5C4 3.67157 4.67157 3 5.5 3H8.5C9.32843 3 10 3.67157 10 4.5V19.5C10 20.3284 9.32843 21 8.5 21H5.5C4.67157 21 4 20.3284 4 19.5Z" fill="#0071E3"/>
+            <path d="M14 19.5V10.5C14 9.67157 14.6716 9 15.5 9H18.5C19.3284 9 20 9.67157 20 10.5V19.5C20 20.3284 19.3284 21 18.5 21H15.5C14.6716 21 14 20.3284 14 19.5Z" fill="#0071E3" fill-opacity="0.5"/>
+          </svg>
+        </div>
+        <span class="brand-text">Auditor UTS <span class="brand-sub">Alpro</span></span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#fitur" class="nav-item">Fitur Audit</a>
+        <a href="#aturan" class="nav-item">Aturan Kelulusan</a>
+        <a href="#demo" class="nav-item">Studio Demo</a>
+        <a href="#alur" class="nav-item">Alur Kerja</a>
+        <a href="#faq" class="nav-item">FAQ UTS</a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="#unduh" class="btn-pill btn-primary-blue">
+          <span>Pasang Ekstensi</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ========================================================= -->
+  <!-- HERO SECTION                                              -->
+  <!-- ========================================================= -->
+  <main>
+    <section class="hero-section" id="hero">
+      <div class="container hero-container">
+        
+        <!-- Subtle Pill Announcement -->
+        <div class="hero-chip-wrapper">
+          <div class="pill-chip">
+            <span>Penguji UTS Algoritma &amp; Pemrograman • Mahasiswa Ilmu Komputer</span>
+          </div>
+        </div>
+
+        <!-- Giant Apple-Style Editorial Headline -->
+        <h1 class="hero-headline">
+          Uji kelulusan ujian coding.<br />
+          <span class="headline-gradient">Ungkap logika asli, tangkap print-hack.</span>
+        </h1>
+
+        <!-- Editorial Subtitle -->
+        <p class="hero-subtext">
+          Cek nilai manual ratusan mahasiswa tidak mungkin dilakukan satu per satu. Ekstensi ini men-scrape seluruh leaderboard &amp; submission, memverifikasi syarat <b>LULUS_UTUH</b> (lolos seluruh testcase termasuk hidden case), menghitung selisih bobot soal, dan membongkar kode yang hanya akal-akalan <code>print()</code>.
+        </p>
+
+        <!-- CTA Buttons Row -->
+        <div class="hero-cta-group">
+          <a href="#unduh" class="btn-hero btn-hero-primary">
+            <span>Unduh Ekstensi Browser</span>
+          </a>
+          <a href="#demo" class="btn-hero btn-hero-secondary">
+            <span>Coba Sandbox Demo</span>
+          </a>
+        </div>
+
+        <!-- Trust Badges with Minimalist SVGs -->
+        <div class="trust-bullets">
+          <div class="trust-item">
+            <svg class="trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span>Syarat LULUS_UTUH (Semua Testcase + Hidden)</span>
+          </div>
+          <div class="trust-item">
+            <svg class="trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span>Deteksi Flag HANYA_PRINT &amp; Short Code</span>
+          </div>
+          <div class="trust-item">
+            <svg class="trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>Ekspor JSON &amp; CSV Rekap (Impor Langsung ke Dashboard)</span>
+          </div>
+        </div>
+
+        <!-- ===================================================== -->
+        <!-- FLOATING HERO DASHBOARD PREVIEW                        -->
+        <!-- ===================================================== -->
+        <div class="dashboard-preview-card" id="demo">
+          <div class="dashboard-body">
+            <!-- Sidebar -->
+            <aside class="dashboard-sidebar">
+              <div class="sidebar-brand">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5V4.5C4 3.67157 4.67157 3 5.5 3H8.5C9.32843 3 10 3.67157 10 4.5V19.5C10 20.3284 9.32843 21 8.5 21H5.5C4.67157 21 4 20.3284 4 19.5Z"/>
+                  <path d="M14 19.5V10.5C14 9.67157 14.6716 9 15.5 9H18.5C19.3284 9 20 9.67157 20 10.5V19.5C20 20.3284 19.3284 21 18.5 21H15.5C14.6716 21 14 20.3284 14 19.5Z"/>
+                </svg>
+                <span>Studio UTS</span>
+              </div>
+              <ul class="sidebar-nav">
+                <li class="sidebar-item active" data-tab="overview">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                  <span>Ringkasan Nilai</span>
+                </li>
+                <li class="sidebar-item" data-tab="submissions">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                  </svg>
+                  <span>Pemeriksaan Kode</span>
+                </li>
+                <li class="sidebar-item" data-tab="audit">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span>Log Anti-Throttle</span>
+                </li>
+              </ul>
+              <div class="sidebar-footer" style="padding-top: 16px; border-top: 1px solid var(--border-subtle); margin-top: auto;">
+                <div class="status-indicator" style="display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-secondary);">
+                  <span class="pulse-dot"></span>
+                  <span>Admin Mode (/judge/submissions)</span>
+                </div>
+              </div>
+            </aside>
+
+            <!-- Main Panel Content -->
+            <div class="dashboard-content">
+              <!-- Header Bar inside preview -->
+              <div class="content-header">
+                <div>
+                  <h3 class="content-title" id="studioTabTitle">Ringkasan Ujian Tengah Semester</h3>
+                </div>
+                <div class="content-meta">
+                  <span id="studioTabSubtitle">Mata Kuliah: Algoritma dan Pemrograman (Ilmu Komputer)</span>
+                </div>
+              </div>
+
+              <!-- ================================================= -->
+              <!-- TAB 1: RINGKASAN NILAI (OVERVIEW)                 -->
+              <!-- ================================================= -->
+              <div class="studio-tab-view active" id="viewOverview">
+                <!-- Metric Cards (Computed from Real Audit Data) -->
+                <div class="metrics-grid">
+                  <div class="metric-card">
+                    <div class="metric-header">
+                      <span class="metric-label">Peserta Ujian</span>
+                      <span class="metric-dot"></span>
+                    </div>
+                    <div class="metric-value" id="metricVisitors">84</div>
+                    <div class="metric-trend trend-up">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="7" y1="17" x2="17" y2="7"/>
+                        <polyline points="7 7 17 7 17 17"/>
+                      </svg>
+                      <span>100% Terindeks</span>
+                    </div>
+                  </div>
+
+                  <div class="metric-card">
+                    <div class="metric-header">
+                      <span class="metric-label">Lulus Utuh (LULUS_UTUH)</span>
+                      <span class="metric-dot"></span>
+                    </div>
+                    <div class="metric-value highlight-blue" id="metricSignups">58</div>
+                    <div class="metric-trend trend-up">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="7" y1="17" x2="17" y2="7"/>
+                        <polyline points="7 7 17 7 17 17"/>
+                      </svg>
+                      <span>69.0% Memenuhi Syarat</span>
+                    </div>
+                  </div>
+
+                  <div class="metric-card">
+                    <div class="metric-header">
+                      <span class="metric-label">Total Poin Terakumulasi</span>
+                      <span class="metric-dot"></span>
+                    </div>
+                    <div class="metric-value" id="metricRevenue">6,425 pts</div>
+                    <div class="metric-trend trend-down">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="7" y1="7" x2="17" y2="17"/>
+                        <polyline points="17 7 17 17 7 17"/>
+                      </svg>
+                      <span>Selisih: 1,975 pts</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Interactive Simulator Panel / Live Table Preview -->
+                <div class="interactive-panel">
+                  <div class="panel-action-bar">
+                    <div class="badge-contest">
+                      <span class="pulse-dot"></span>
+                      <span>Kontes: <b id="contestTitleDisplay">uts-alpro-ilkom-2026</b> (Bobot: 100 poin)</span>
+                    </div>
+                    <div class="panel-buttons">
+                      <label class="btn-action-sm btn-ghost" for="jsonFileInput" title="Impor file *_submissions_audit.json hasil scrape ekstensi">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        <span>Impor Scraped JSON</span>
+                      </label>
+                      <input type="file" id="jsonFileInput" accept=".json,.html" style="display: none;" />
+
+                      <button class="btn-action-sm" id="btnSimulate">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        <span>Simulasikan Audit</span>
+                      </button>
+                      <button class="btn-action-sm btn-ghost" id="btnExportCSV">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        <span>Ekspor CSV Rekap</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Simulation Progress -->
+                  <div class="simulation-progress" id="simProgress" style="display:none;">
+                    <div class="prog-meta">
+                      <span id="progLabel">Menghubungkan ke API HackerRank...</span>
+                      <span id="progPercent">0%</span>
+                    </div>
+                    <div class="prog-track">
+                      <div class="prog-bar" id="progBar"></div>
+                    </div>
+                  </div>
+
+                  <!-- Leaderboard Data Table Preview with Horizontal Scroller -->
+                  <div class="data-table-card">
+                    <div class="table-toolbar">
+                      <div class="search-box">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="11" cy="11" r="8"/>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="filterInput" placeholder="Cari nama mahasiswa atau username..." />
+                      </div>
+                      <div class="filter-pills">
+                        <button class="filter-pill active" data-filter="all">Semua (5)</button>
+                        <button class="filter-pill" data-filter="LULUS_UTUH">LULUS UTUH (3)</button>
+                        <button class="filter-pill" data-filter="PERLU_REVIEW_MANUAL">PERLU REVIEW (1)</button>
+                        <button class="filter-pill" data-filter="BELUM_LULUS">BELUM LULUS (1)</button>
+                      </div>
+                    </div>
+
+                    <div class="table-responsive">
+                      <table class="data-table" id="contestTable">
+                        <thead>
+                          <tr>
+                            <th>Rank</th>
+                            <th>Mahasiswa</th>
+                            <th>Username</th>
+                            <th>Skor / Total</th>
+                            <th>Testcase</th>
+                            <th>Status Audit</th>
+                            <th>Inspeksi Kode</th>
+                          </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                          <!-- Populated by app.js -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- ================================================= -->
+              <!-- TAB 2: PEMERIKSAAN KODE (CODE INSPECTOR VIEW)     -->
+              <!-- ================================================= -->
+              <div class="studio-tab-view" id="viewSubmissions" style="display: none;">
+                <div class="inspector-card">
+                  <!-- Toolbar: Mahasiswa Selector -->
+                  <div class="inspector-toolbar">
+                    <div class="inspector-student-picker">
+                      <label for="inspectorStudentSelect" style="font-size:12px; font-weight:600; color:var(--ink-secondary);">Pilih Mahasiswa:</label>
+                      <select id="inspectorStudentSelect" class="inspector-select">
+                        <!-- Populated by app.js -->
+                      </select>
+                      <button class="btn-action-sm btn-ghost" id="btnInspectorPrev" title="Mahasiswa Sebelumnya">&larr;</button>
+                      <button class="btn-action-sm btn-ghost" id="btnInspectorNext" title="Mahasiswa Berikutnya">&rarr;</button>
+                    </div>
+
+                    <div class="inspector-badge-group">
+                      <span class="status-badge lulus" id="inspectorStatusBadge">LULUS UTUH</span>
+                      <span id="inspectorScoreDisplay" style="font-weight:700; font-size:13.5px; color:var(--ink-primary);">Skor: 100 / 100</span>
+                    </div>
+                  </div>
+
+                  <!-- Chips Pemilih Soal UTS -->
+                  <div>
+                    <div style="font-size:11px; font-weight:700; color:var(--ink-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Soal yang Dikerjakan:</div>
+                    <div class="inspector-problem-pills" id="inspectorProblemPills">
+                      <!-- Injected by app.js -->
+                    </div>
+                  </div>
+
+                  <!-- Code Editor Card with Horizontal Scroller -->
+                  <div class="code-editor-box">
+                    <div class="code-editor-bar">
+                      <div>
+                        <b id="inspectorChallengeTitle">Segitiga Bintang</b>
+                        <span id="inspectorChallengeWeight" style="margin-left:8px; opacity:0.8;">(Bobot: 25)</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        <span id="inspectorLangBadge" style="background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:4px; font-size:11px;">Python 3</span>
+                        <span id="inspectorTcScore" style="color:#34d399; font-weight:600;">15 / 15 testcase lolos</span>
+                        <button class="btn-action-sm" id="btnInspectorCopyCode" style="padding:4px 10px; font-size:11.5px;">Salin Kode</button>
+                      </div>
+                    </div>
+
+                    <!-- Code Viewport with smooth horizontal and vertical scrolling -->
+                    <pre class="code-editor-viewport"><code id="inspectorCodeViewport"># Memuat baris kode submission...</code></pre>
+
+                    <!-- Horizontal Scroller Helper Hint -->
+                    <div class="code-scroll-helper">
+                      <span>⟵ Geser horizontal untuk melihat baris kode panjang ⟶</span>
+                      <span id="inspectorLineCount">0 baris kode</span>
+                    </div>
+                  </div>
+
+                  <!-- Analisis Forensik & Flag -->
+                  <div class="forensic-callout" id="inspectorForensicCallout">
+                    <div class="forensic-title">
+                      <span id="forensicIcon">✓</span>
+                      <span id="forensicHeading">Analisis Audit Kelulusan:</span>
+                    </div>
+                    <div id="forensicBody" style="color:var(--ink-secondary); line-height:1.5;">
+                      Mahasiswa menyelesaikan soal ini secara utuh dan lolos seluruh testcase (termasuk hidden cases). Memenuhi syarat kelulusan ujian UTS (LULUS_UTUH).
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- ================================================= -->
+              <!-- TAB 3: LOG ANTI-THROTTLE (TELEMETRY VIEW)         -->
+              <!-- ================================================= -->
+              <div class="studio-tab-view" id="viewAudit" style="display: none;">
+                <!-- Telemetry KPI Grid -->
+                <div class="telemetry-grid">
+                  <div class="telemetry-card">
+                    <span class="telemetry-label">Worker Scraper</span>
+                    <span class="telemetry-value" style="color:var(--apple-blue);">1 Worker (Pacing)</span>
+                  </div>
+                  <div class="telemetry-card">
+                    <span class="telemetry-label">Jeda Antar-Request</span>
+                    <span class="telemetry-value">1.2 Detik</span>
+                  </div>
+                  <div class="telemetry-card">
+                    <span class="telemetry-label">Status HackerRank</span>
+                    <span class="telemetry-value" style="color:var(--apple-green);">200 OK</span>
+                  </div>
+                  <div class="telemetry-card">
+                    <span class="telemetry-label">Proteksi HTTP 429</span>
+                    <span class="telemetry-value" style="color:var(--apple-orange);">Backoff 1.5s/5s/15s</span>
+                  </div>
+                </div>
+
+                <!-- Terminal Console Box -->
+                <div class="terminal-console-box">
+                  <div class="terminal-header">
+                    <div class="terminal-title">
+                      <span class="pulse-dot"></span>
+                      <span>Terminal Log Telemetry HackerRank Scraper</span>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                      <button class="btn-action-sm" id="btnRunLogSim" style="font-size:11.5px; padding:4px 10px;">Simulasikan Request</button>
+                      <button class="btn-action-sm btn-ghost" id="btnClearLog" style="font-size:11.5px; padding:4px 10px; color:#fff; border-color:rgba(255,255,255,0.2);">Bersihkan</button>
+                    </div>
+                  </div>
+
+                  <div class="terminal-stream" id="terminalLogStream">
+                    <div class="terminal-line"><span class="term-time">[10:41:02]</span> <span class="term-tag-info">[INIT]</span> Ekstensi terhubung ke sesi admin HackerRank.</div>
+                    <div class="terminal-line"><span class="term-time">[10:41:03]</span> <span class="term-tag-ok">[GET]</span> /rest/contests/uts-alpro-ilkom-2026/leaderboard?limit=84 (HTTP 200 OK) - 84 kontestan terindeks.</div>
+                    <div class="terminal-line"><span class="term-time">[10:41:04]</span> <span class="term-tag-ok">[GET]</span> /rest/contests/uts-alpro-ilkom-2026/judge_submissions/?offset=0&amp;limit=100 (HTTP 200 OK).</div>
+                    <div class="terminal-line"><span class="term-time">[10:41:05]</span> <span class="term-tag-ok">[CHALLENGES]</span> Bobot resmi: Ejak (15), Layanan (20), Nilai (20), Rabbit (20), Segitiga (25).</div>
+                    <div class="terminal-line"><span class="term-time">[10:41:07]</span> <span class="term-tag-ok">[FETCH_CODE]</span> alex_rivera #201 (Segitiga Bintang) - 15/15 testcase lolos. Jeda 1.2s.</div>
+                    <div class="terminal-line"><span class="term-time">[10:41:08]</span> <span class="term-tag-warn">[AUDIT_FLAG]</span> siti_r #207 (Layanan Bank) terdeteksi flag: HANYA_PRINT, SEBAGIAN_TC_LOLOS.</div>
+                    <div class="terminal-line"><span class="term-time">[10:41:10]</span> <span class="term-tag-ok">[COMPLETE]</span> 84 mahasiswa ter-audit: 58 LULUS_UTUH, 1 PERLU_REVIEW_MANUAL, 25 BELUM_LULUS.</div>
+                  </div>
+                </div>
+
+                <div class="forensic-callout">
+                  <div class="forensic-title">Catatan Pacing Anti-Throttle:</div>
+                  <div style="color:var(--ink-secondary); font-size:12.5px;">
+                    Setiap fetch detail kode mahasiswa dibatasi secara berurutan (1 worker). Jika HackerRank mengembalikan HTTP 429, scraper akan berhenti sejenak selama 1.5 detik, 5 detik, hingga 15 detik sebelum melanjutkan, dan mencatat status ke dalam <code>code_errors</code>.
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- BENTO GRID SECTION                                         -->
+    <!-- ========================================================= -->
+    <section class="bento-section" id="fitur">
+      <div class="container">
+        
+        <div class="section-kicker">ARSITEKTUR &amp; MEKANISME AUDIT</div>
+        <h2 class="section-heading">
+          Pemeriksaan ujian menyeluruh.<br />
+          Dari leaderboard hingga baris kode.
+        </h2>
+        <p class="section-subtext">
+          Menilai ratusan berkas coding satu per satu tidak mungkin dilakukan manual. Sistem mengotomatisasi pemeringkatan, pengujian testcase tersembunyi, hingga pembongkaran trik <i>hardcode print</i>.
+        </p>
+
+        <!-- Bento 3-Column Layout -->
+        <div class="bento-grid">
+          
+          <!-- Bento Card 1: Pacing & Anti-Throttle -->
+          <div class="bento-card">
+            <div class="bento-card-visual">
+              <div class="mockup-feed">
+                <div class="feed-item">
+                  <span class="feed-tag tag-code">&lt;/&gt;</span>
+                  <div class="feed-content">
+                    <div class="feed-title">Paginasi judge_submissions</div>
+                    <div class="feed-desc">Ambil batch 100 per halaman s.d. tuntas</div>
+                  </div>
+                  <span class="feed-time">1.2 dtk</span>
+                </div>
+
+                <div class="feed-item">
+                  <span class="feed-tag tag-explore">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                  </span>
+                  <div class="feed-content">
+                    <div class="feed-title">Filter Kandidat Best</div>
+                    <div class="feed-desc">Hanya ambil detail kode skor tertinggi</div>
+                  </div>
+                  <span class="feed-time">Hemat API</span>
+                </div>
+
+                <div class="feed-item featured">
+                  <span class="feed-tag tag-accent">$</span>
+                  <div class="feed-content">
+                    <div class="feed-title">Anti-Throttle Backoff</div>
+                    <div class="feed-desc">Jeda 1.5s / 5s / 15s saat terkena HTTP 429</div>
+                  </div>
+                  <span class="feed-time">Aman</span>
+                </div>
+
+                <div class="feed-item">
+                  <span class="feed-tag tag-member">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  </span>
+                  <div class="feed-content">
+                    <div class="feed-title">Bobot Soal Resmi Kontes</div>
+                    <div class="feed-desc">Ejak 15, Layanan 20, Nilai 20, Rabbit 20, Segitiga 25</div>
+                  </div>
+                  <span class="feed-time">100 Pts</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bento-card-meta">
+              <span class="bento-category">PAGINASI &amp; ANTI-THROTTLE</span>
+              <h3 class="bento-title">Tarik Data Massal Tanpa Terblokir</h3>
+              <p class="bento-desc">
+                HackerRank membatasi request cepat dengan status HTTP 429. Ekstensi berjalan dengan 1 worker teratur, jeda 1.2 detik, dan backoff bertingkat otomatis.
+              </p>
+            </div>
+          </div>
+
+          <!-- Bento Card 2: Deteksi Print-Hack & Syarat Kelulusan -->
+          <div class="bento-card">
+            <div class="bento-card-visual">
+              <div class="mockup-chat">
+                <div class="chat-header">
+                  <div class="chat-header-left">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    <span>Analisis Forensik Kode</span>
+                  </div>
+                  <span class="chat-badge">Audit</span>
+                </div>
+                <div class="chat-prompt">
+                  Deteksi Akal-akalan print() tanpa Logika
+                </div>
+                <div class="chat-connection">
+                  <span class="status-online"></span>
+                  <span class="conn-name">UTS RULE ENGINE</span>
+                  <span class="conn-tag">LULUS_UTUH Verification</span>
+                </div>
+                <div class="chat-result">
+                  <div class="result-title">
+                    <span>Sebaran Flag Mahasiswa</span>
+                    <span class="result-period">Hasil Audit</span>
+                  </div>
+                  <div class="result-bar-group">
+                    <div class="result-row">
+                      <span class="bar-label">LULUS UTUH</span>
+                      <div class="bar-track"><div class="bar-fill" style="width: 69%; background: #34c759;"></div></div>
+                      <span class="bar-val">69%</span>
+                    </div>
+                    <div class="result-row">
+                      <span class="bar-label">HANYA_PRINT</span>
+                      <div class="bar-track"><div class="bar-fill" style="width: 18%; background: #ff9500;"></div></div>
+                      <span class="bar-val">18%</span>
+                    </div>
+                    <div class="result-row">
+                      <span class="bar-label">BELUM LULUS</span>
+                      <div class="bar-track"><div class="bar-fill" style="width: 13%; background: #ff3b30;"></div></div>
+                      <span class="bar-val">13%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bento-card-meta">
+              <span class="bento-category">SYARAT LULUS_UTUH</span>
+              <h3 class="bento-title">Tertangkapnya Print-Hack</h3>
+              <p class="bento-desc">
+                Kode dengan trik <code>print("SKIP!")</code> atau <code>print(2)</code> yang hanya mencari skor sampel otomatis ditandai dengan flag <code>HANYA_PRINT</code> dan <code>SEBAGIAN_TC_LOLOS</code>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Bento Card 3: 3 Berkas Sekali Klik -->
+          <div class="bento-card">
+            <div class="bento-card-visual">
+              <div class="mockup-journey">
+                <div class="journey-track">
+                  <div class="journey-step">
+                    <div class="step-icon-wrap icon-start">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                    </div>
+                    <div class="step-info">
+                      <div class="step-title">{slug}_submissions_audit.json</div>
+                      <div class="step-route">Data hierarkis mentah, best submission &amp; weights</div>
+                    </div>
+                    <span class="step-time">JSON</span>
+                  </div>
+
+                  <div class="journey-connector"></div>
+
+                  <div class="journey-step">
+                    <div class="step-icon-wrap icon-code">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <div class="step-info">
+                      <div class="step-title">{slug}_rekap_audit.csv</div>
+                      <div class="step-route">Rekap nilai per soal, selisih total, dan status</div>
+                    </div>
+                    <span class="step-time">CSV</span>
+                  </div>
+
+                  <div class="journey-connector"></div>
+
+                  <div class="journey-step">
+                    <div class="step-icon-wrap icon-paid">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div class="step-info">
+                      <div class="step-title">{slug}_laporan_audit.html</div>
+                      <div class="step-route">Laporan interaktif mandiri, nol request eksternal</div>
+                    </div>
+                    <span class="step-time">HTML</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bento-card-meta">
+              <span class="bento-category">EKSPOR KONSISTEN</span>
+              <h3 class="bento-title">3 Berkas Sekali Download</h3>
+              <p class="bento-desc">
+                JSON audit, CSV rekapitulasi, dan laporan HTML interaktif dilahirkan serempak dari objek payload yang sama. Tanpa diskrepansi angka atau data.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- BLUE DOT-MATRIX TEXTURED BANNER                           -->
+    <!-- ========================================================= -->
+    <section class="banner-section" id="unduh">
+      <div class="container">
+        <div class="blue-matrix-card">
+          <!-- Circular Dot Matrix Canvas Texture Layer -->
+          <div class="dot-matrix-overlay" aria-hidden="true"></div>
+
+          <div class="matrix-content">
+            <span class="matrix-pill">PENILAIAN CEPAT. AKURASI MUTLAK.</span>
+            <h2 class="matrix-headline">
+              Koreksi ujian ratusan mahasiswa<br />
+              selesai dalam hitungan menit.
+            </h2>
+            <p class="matrix-subtext">
+              Pasang ekstensi ringan siap pakai untuk Chrome, Brave, Edge, atau Zen Browser. Jalankan langsung di tab admin HackerRank tanpa setup server backend.
+            </p>
+            <div class="matrix-cta-row">
+              <a href="#alur" class="btn-matrix-primary">
+                <span>Panduan Instalasi Ekstensi</span>
+              </a>
+            </div>
+            <div class="matrix-downloads" style="display:flex; gap:8px; margin-top:24px; flex-wrap:wrap; justify-content:center;">
+              <span class="browser-badge" style="background:rgba(255,255,255,0.18); padding:4px 12px; border-radius:9999px; font-size:12px;">Google Chrome</span>
+              <span class="browser-badge" style="background:rgba(255,255,255,0.18); padding:4px 12px; border-radius:9999px; font-size:12px;">Zen Browser</span>
+              <span class="browser-badge" style="background:rgba(255,255,255,0.18); padding:4px 12px; border-radius:9999px; font-size:12px;">Brave Browser</span>
+              <span class="browser-badge" style="background:rgba(255,255,255,0.18); padding:4px 12px; border-radius:9999px; font-size:12px;">Mozilla Firefox</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- FAQ ACCORDION SECTION (100% AGENTS.MD CONTEXT)             -->
+    <!-- ========================================================= -->
+    <section class="faq-section" id="faq">
+      <div class="container faq-container">
+        
+        <div class="faq-header">
+          <span class="section-kicker">FAQ UTS ALPRO</span>
+          <h2 class="section-heading">Pertanyaan Penting Seputar Audit Ujian</h2>
+        </div>
+
+        <div class="faq-accordion-list">
+          
+          <!-- Accordion Item 1 (Expanded by default) -->
+          <div class="faq-item expanded">
+            <button class="faq-trigger" aria-expanded="true">
+              <span class="faq-question">Apa syarat kelulusan ujian (status LULUS_UTUH)?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M18 15l-6-6-6 6"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Syarat kelulusan ujian UTS/UAS Algoritma dan Pemrograman adalah <strong>minimal 1 soal diselesaikan secara utuh</strong>, yaitu kode lolos seluruh testcase (termasuk hidden testcase) dan meraih poin maksimum pada soal tersebut. Tanpa bukti kelulusan utuh, peserta berstatus <strong>PERLU_REVIEW_MANUAL</strong> (bukan lulus) atau <strong>BELUM_LULUS</strong>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Accordion Item 2 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span class="faq-question">Bagaimana akal-akalan print output (print-hack) tertangkap?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Banyak mahasiswa mencoba trik mencetak teks langsung seperti <code>print("SKIP!")</code> atau <code>print(2)</code> untuk mendapat skor parsial pada sample testcase tanpa memiliki algoritma penyelesaian. Sistem memeriksa konten kode dan perbandingan testcase: jika hanya ada perintah print atau kode sangat pendek (&le; 2 baris), sistem otomatis menandainya dengan flag <code>HANYA_PRINT</code>, <code>KODE_SANGAT_PENDEK</code>, atau <code>SEBAGIAN_TC_LOLOS</code>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Accordion Item 3 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span class="faq-question">Mengapa scraping harus dijalankan dengan tab /judge/submissions terlihat?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Endpoint HackerRank <code>judge_submissions/</code> memerlukan hak akses admin atau penguji kontes. Jika halaman kontes dibuka sebagai peserta biasa, HackerRank hanya akan mengembalikan riwayat submission milik akun sendiri. Membuka kontes dengan tab <code>/judge/submissions</code> memastikan seluruh submission mahasiswa dapat ditarik secara massal.
+              </p>
+            </div>
+          </div>
+
+          <!-- Accordion Item 4 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span class="faq-question">Bagaimana sistem menangani rate limit (HTTP 429) HackerRank?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                HackerRank menerapkan throttle ketat (sekitar 429 tiap &plusmn;4 request cepat). Scraper ini menggunakan arsitektur single worker dengan jeda 1.2 detik antar-request detail kode, serta <em>exponential backoff</em> bertingkat (1.5 dtk, 5 dtk, 15 dtk) khusus saat status HTTP 429 terdeteksi. Setiap kegagalan juga dicatat rapi ke dalam <code>code_errors</code>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Accordion Item 5 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span class="faq-question">Berkas apa saja yang dihasilkan setelah proses audit?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Setelah audit selesai, ekstensi secara otomatis mengunduh 3 berkas yang konsisten:
+                <br />1. <strong>{slug}_submissions_audit.json</strong>: Data mentah seluruh mahasiswa, submission terbaik, dan bobot soal.
+                <br />2. <strong>{slug}_rekap_audit.csv</strong>: Tabel rekap nilai Excel berisi skor per soal, selisih bobot, flag, dan status kelulusan.
+                <br />3. <strong>{slug}_laporan_audit.html</strong>: Dasbor laporan interaktif mandiri (nol request eksternal) dengan daftar mahasiswa, filter status, dan peninjau kode.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- WORKFLOW SECTION                                          -->
+    <!-- ========================================================= -->
+    <section class="steps-section" id="alur">
+      <div class="container">
+        <div class="section-kicker">PANDUAN PEMAKAIAN</div>
+        <h2 class="section-heading">Langkah Penggunaan di Browser</h2>
+        <p class="section-subtext">Hanya butuh 3 langkah sederhana di peramban Chrome atau Zen/Firefox.</p>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">01</div>
+            <h3 class="step-title">Buka Halaman Kontes Admin</h3>
+            <p class="step-desc">
+              Buka kontes ujian HackerRank Anda (mis. <code>hackerrank.com/contests/[slug]/leaderboard</code>) dan pastikan akun Anda memiliki hak akses penguji/admin.
+            </p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">02</div>
+            <h3 class="step-title">Pilih Mode &amp; Batas Peserta</h3>
+            <p class="step-desc">
+              Buka pop-up ekstensi, pilih mode <b>Submission + audit per peserta</b>, tentukan limit mahasiswa, serta aktifkan opsi <b>Ambil Real Name</b> dan <b>Sertakan Source Kode</b>.
+            </p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">03</div>
+            <h3 class="step-title">Unduh Rekap Otomatis</h3>
+            <p class="step-desc">
+              Klik <b>Download</b>. Ekstensi akan men-scrape data, melakukan audit <i>LULUS_UTUH</i>, dan mengunduh berkas JSON, CSV Rekap, serta Laporan HTML siap pakai.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- CODE VIEWER MODAL                                          -->
+  <!-- ========================================================= -->
+  <div class="modal-backdrop" id="codeModal" style="display: none;">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge" id="modalStatusBadge">LULUS UTUH</span>
+          <h4 class="modal-title" id="modalCandidateName">Alex Rivera</h4>
+          <span class="modal-sub" id="modalProblemName">Soal: Segitiga (Bobot: 25)</span>
+        </div>
+        <button class="modal-close" id="btnCloseModal" aria-label="Tutup jendela modal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Problem Selector Tabs if Student Solved Multiple Problems -->
+      <div class="modal-challenge-picker" id="modalChallengePicker" style="display:flex; gap:6px; padding:8px 24px; background:#f5f5f7; border-bottom:1px solid var(--border-light); overflow-x:auto;">
+        <!-- Injected by app.js -->
+      </div>
+
+      <div class="modal-meta-bar">
+        <span>Bahasa: <b id="modalLang">Python 3</b></span>
+        <span>Skor: <b id="modalScore">25 / 25</b></span>
+        <span>Testcase: <b id="modalTC">15 / 15 (100% lolos)</b></span>
+        <button class="btn-action-sm" id="btnCopyCode">Salin Kode</button>
+      </div>
+      <pre class="modal-code"><code id="modalCodeContent"># Memuat baris kode submission...</code></pre>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- FOOTER                                                    -->
+  <!-- ========================================================= -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-col">
+        <div class="footer-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 19.5V4.5C4 3.67157 4.67157 3 5.5 3H8.5C9.32843 3 10 3.67157 10 4.5V19.5C10 20.3284 9.32843 21 8.5 21H5.5C4.67157 21 4 20.3284 4 19.5Z" fill="#0071E3"/>
+            <path d="M14 19.5V10.5C14 9.67157 14.6716 9 15.5 9H18.5C19.3284 9 20 9.67157 20 10.5V19.5C20 20.3284 19.3284 21 18.5 21H15.5C14.6716 21 14 20.3284 14 19.5Z" fill="#0071E3" fill-opacity="0.5"/>
+          </svg>
+          <span class="footer-title">HackerRank Auditor UTS</span>
+        </div>
+        <p style="font-size:12.5px; color:var(--ink-secondary); margin-top:8px; max-width:340px;">
+          Penguji otomatis kelulusan UTS/UAS Algoritma dan Pemrograman. Dirancang mengikuti prinsip Apple Human Interface Guidelines &amp; Minimalist UI.
+        </p>
+      </div>
+
+      <div class="footer-links-grid">
+        <div class="footer-col">
+          <span class="footer-heading">EKSTENSI</span>
+          <a href="#unduh">Chrome / Brave / Edge</a>
+          <a href="#unduh">Zen Browser / Firefox</a>
+          <a href="#demo">Studio Live Sandbox</a>
+          <a href="#alur">Panduan Instalasi</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-heading">ATURAN AUDIT</span>
+          <a href="#aturan">Syarat LULUS_UTUH</a>
+          <a href="#fitur">Deteksi Flag Print-Hack</a>
+          <a href="#fitur">Bobot Soal UTS</a>
+          <a href="#fitur">Pacing Anti-Throttle</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-heading">DOKUMENTASI</span>
+          <a href="#faq">FAQ Penguji</a>
+          <a href="https://developer.apple.com/design/" target="_blank" rel="noopener">Apple Design Principles</a>
+          <a href="#hero">Kembali ke Atas</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
