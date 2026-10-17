@@ -4,32 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HackerRank Leaderboard Scraper</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="popup.css" />
   <link rel="stylesheet" href="popup-components.css" />
   <link rel="stylesheet" href="popup-audit.css" />
 </head>
 <body>
   <div class="container">
-    <div class="header">
+    
+    <!-- Header -->
+    <header class="header">
       <div class="logo">
         <div class="logo-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 20H21" stroke="#0d9488" stroke-width="2" stroke-linecap="round"/>
-            <rect x="4.5" y="12" width="4" height="8" rx="1" fill="#14b8a6"/>
-            <rect x="10" y="6" width="4" height="14" rx="1" fill="#ffffff"/>
-            <rect x="15.5" y="14" width="4" height="6" rx="1" fill="#0d9488"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M4 19.5V4.5C4 3.67157 4.67157 3 5.5 3H8.5C9.32843 3 10 3.67157 10 4.5V19.5C10 20.3284 9.32843 21 8.5 21H5.5C4.67157 21 4 20.3284 4 19.5Z" fill="#0071E3"/>
+            <path d="M14 19.5V10.5C14 9.67157 14.6716 9 15.5 9H18.5C19.3284 9 20 9.67157 20 10.5V19.5C20 20.3284 19.3284 21 18.5 21H15.5C14.6716 21 14 20.3284 14 19.5Z" fill="#0071E3" fill-opacity="0.5"/>
           </svg>
         </div>
         <div class="logo-text">
-          <span class="title">Leaderboard</span>
-          <span class="subtitle">HackerRank Scraper</span>
+          <span class="title">Waymark</span>
+          <span class="subtitle">HackerRank Auditor</span>
         </div>
       </div>
-      <div class="badge" id="statusBadge">Ready</div>
-    </div>
+      <div class="badge ready" id="statusBadge">Ready</div>
+    </header>
+
+    <!-- Info Panel / Telemetry Inset -->
     <div class="info-panel" id="infoPanel">
       <div class="info-row">
         <span class="info-label">Halaman</span>
@@ -37,55 +36,67 @@
       </div>
       <div class="info-row">
         <span class="info-label">Kontes</span>
-        <span class="info-value" id="contestName">—</span>
+        <span class="info-value highlight" id="contestName">—</span>
       </div>
     </div>
+
+    <!-- Scrape Mode -->
     <div class="config-section">
-      <label class="config-label">Mode scrape</label>
+      <label class="config-label" for="modeSelect">Mode Scrape</label>
       <div class="select-wrapper">
         <select id="modeSelect">
-          <option value="leaderboard">Leaderboard saja</option>
-          <option value="submissions" selected>Submission + audit</option>
+          <option value="leaderboard">Leaderboard saja (skor total)</option>
+          <option value="submissions" selected>Submission + audit per peserta</option>
         </select>
         <svg class="select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none">
-          <path d="M6 9L12 15L18 9" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
       </div>
     </div>
+
+    <!-- Limit Selection -->
     <div class="config-section">
-      <label class="config-label">Jumlah Peserta (limit)</label>
+      <label class="config-label" for="limitSelect">Jumlah Peserta (Limit)</label>
       <div class="select-wrapper">
         <select id="limitSelect">
+          <option value="10">10 peserta</option>
+          <option value="25">25 peserta</option>
           <option value="50">50 peserta</option>
           <option value="100" selected>100 peserta</option>
           <option value="200">200 peserta</option>
-          <option value="500">500 peserta</option>
-          <option value="1000">1000 peserta</option>
+          <option value="5000">Semua peserta</option>
         </select>
         <svg class="select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none">
-          <path d="M6 9L12 15L18 9" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
       </div>
     </div>
+
+    <!-- Challenge Filter -->
     <div class="config-section">
-      <label class="config-label">Filter soal (opsional)</label>
+      <label class="config-label" for="challengeFilter">Filter Soal (Opsional)</label>
       <input id="challengeFilter" class="text-input" type="text" placeholder="mis. array-sorting" />
     </div>
+
+    <!-- Options Section with Apple iOS Toggles -->
     <div class="options-section">
       <label class="toggle-row" for="fetchRealName">
         <div class="toggle-info">
           <span class="toggle-label">Ambil Real Name</span>
-          <span class="toggle-desc">Fetch profil tiap peserta (lebih lambat)</span>
+          <span class="toggle-desc">Fetch profil tiap peserta</span>
         </div>
         <div class="toggle-switch">
           <input type="checkbox" id="fetchRealName" checked />
           <span class="slider"></span>
         </div>
       </label>
+
+      <div class="divider"></div>
+
       <label class="toggle-row" for="includeCode">
         <div class="toggle-info">
-          <span class="toggle-label">Sertakan Kode</span>
-          <span class="toggle-desc">Unduh source tiap submission (audit)</span>
+          <span class="toggle-label">Sertakan Source Kode</span>
+          <span class="toggle-desc">Unduh kode tiap soal (mode audit)</span>
         </div>
         <div class="toggle-switch">
           <input type="checkbox" id="includeCode" checked />
@@ -93,32 +104,42 @@
         </div>
       </label>
     </div>
+
+    <!-- Progress Indicator -->
     <div class="progress-area" id="progressArea" style="display:none;">
       <div class="progress-bar-wrapper">
         <div class="progress-bar" id="progressBar"></div>
       </div>
       <div class="progress-text" id="progressText">Memuat data...</div>
     </div>
+
+    <!-- Console Activity Log -->
     <div class="log-area" id="logArea">
       <div class="log-entry info">
         <span class="log-dot"></span>
         <span>Buka halaman HackerRank untuk memulai.</span>
       </div>
     </div>
+
+    <!-- Primary Action Button -->
     <button class="btn-scrape" id="btnScrape" disabled>
       <span class="btn-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
         </svg>
       </span>
       <span id="btnText">Download</span>
     </button>
+
+    <!-- Footer -->
     <div class="footer">
-      <span>v1.1.0</span>
-      <span>•</span>
-      <span>HackerRank Scraper</span>
+      <span>v1.2.0</span>
+      <span>&bull;</span>
+      <span>Apple HIG Minimalist</span>
     </div>
+
   </div>
+
   <script src="lib/ui.js"></script>
   <script src="lib/audit.js"></script>
   <script src="lib/download.js"></script>
