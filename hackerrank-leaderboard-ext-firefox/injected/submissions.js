@@ -1,42 +1,52 @@
 // runSubmissionScraper — injected via scripting.executeScript.
-// Self-contained (no imports). Mencoba beberapa pola endpoint REST
-// HackerRank karena shape API beda antar kontes/peran login.
-// Mengembalikan kode + testcase + poin per mahasiswa untuk audit.
+// Judge endpoint + bobot soal + detail hemat (hanya kandidat best).
+// Self-contained, <=200 lines.
 async function runSubmissionScraper(contestSlug, hackers, opts) {
   opts = opts || {};
-  var maxPer = opts.maxPerStudent || 20;
   var chalFilter = (opts.challengeFilter || "").toLowerCase();
   var wantCode = opts.includeCode !== false;
   try {
-    if (!contestSlug) return { error: "Mode submission butuh halaman kontes." };
+    if (!contestSlug) return { error: "Mode submission butuh halaman kontes (buka URL /contests/<nama-kontes>/...)." };
     var list = hackers && hackers.length ? hackers : [];
     if (!list.length) {
       var lr = await fetch(
         "https://www.hackerrank.com/rest/contests/" + contestSlug +
         "/leaderboard?offset=0&limit=" + (opts.limit || 100));
       if (!lr.ok) throw new Error("Leaderboard HTTP " + lr.status);
-      var ld = await lr.json();
-      var ms = ld.models || [];
+      var ms = (await lr.json()).models || [];
       for (var q = 0; q < ms.length; q++) list.push(ms[q].hacker);
     }
-    var out = [];
-    var conc = 4, hi = 0;
+    var all = await listAllSubs(contestSlug, opts.cap || 3000);
+    if (!all.length) {
+      return { error: "Endpoint judge tak memberi data. Buka halaman kontes sebagai admin (tab /judge/submissions terlihat) lalu ulangi." };
+    }
+    var weights = await challengeWeights(contestSlug, all);
+    var byUser = {};
+    for (var g = 0; g < all.length; g++) {
+      var key = ownerKey(all[g]);
+      if (!byUser[key]) byUser[key] = [];
+      byUser[key].push(all[g]);
+    }
+    var conc = 1, hi = 0;
     async function oneHacker(h) {
-      var subs = await listSubs(contestSlug, h, maxPer);
-      var per = [];
-      var seen = {};
-      for (var s = 0; s < subs.length; s++) {
-        var det = await detailSub(contestSlug, subs[s], wantCode);
-        if (chalFilter && det.challenge.toLowerCase().indexOf(chalFilter) < 0) {
-          if (det.challenge_slug.toLowerCase().indexOf(chalFilter) < 0) continue;
-        }
-        var key = det.challenge_slug || det.challenge;
-        if (!seen[key] || det.score > seen[key].score) seen[key] = det;
+      var mine = byUser[String(h).toLowerCase()] || [];
+      var per = [], seen = {};
+      for (var s = 0; s < mine.length; s++) {
+        var det = baseOf(mine[s]);
+        if (chalFilter && det.challenge.toLowerCase().indexOf(chalFilter) < 0 &&
+          det.challenge_slug.toLowerCase().indexOf(chalFilter) < 0) continue;
+        var k = det.challenge_slug || det.challenge || det.id;
+        if (!seen[k] || det.score > seen[k].score) seen[k] = det;
         per.push(det);
       }
       var best = [];
-      for (var k in seen) best.push(seen[k]);
-      return { username: h, submissions: per, best_per_challenge: best };
+      for (var b in seen) best.push(seen[b]);
+      for (var d = 0; d < best.length; d++) {
+        await fillDetail(contestSlug, best[d], wantCode, weights);
+      }
+      return { username: h, submissions: per, best_per_challenge: best,
+        submission_count_total: all.length,
+        submission_count_mine: mine.length };
     }
     var res = new Array(list.length), errs = [];
     async function worker() {
@@ -54,78 +64,123 @@ async function runSubmissionScraper(contestSlug, hackers, opts) {
     return { count: students.length, errors: errs,
       filename: contestSlug + "_submissions_audit.json",
       jsonString: JSON.stringify({ contest: contestSlug,
-        generated_at: new Date().toISOString(), students: students }, null, 2) };
+        generated_at: new Date().toISOString(),
+        submission_total_visible: all.length,
+        challenge_weights: weights, students: students }, null, 2) };
   } catch (err) { return { error: err.message }; }
 
+  var lastStatus = 0;
   async function getJson(url) {
     var r = await fetch(url);
+    lastStatus = r.status;
     if (!r.ok) return null;
     try { return await r.json(); } catch (_) { return null; }
   }
-  async function listSubs(slug, hacker, lim) {
-    var urls = [
-      "/rest/contests/" + slug + "/submissions?hacker=" + hacker +
-        "&offset=0&limit=" + lim,
-      "/rest/contests/" + slug + "/submissions?username=" + hacker +
-        "&offset=0&limit=" + lim,
-      "/rest/submissions?contest_slug=" + slug + "&hacker=" + hacker +
-        "&offset=0&limit=" + lim,
-      "/rest/hackers/" + hacker + "/submissions?contest_slug=" + slug +
-        "&offset=0&limit=" + lim
-    ];
-    for (var i = 0; i < urls.length; i++) {
-      var d = await getJson("https://www.hackerrank.com" + urls[i]);
-      var arr = d && (d.models || d.submissions || d.data || d.results);
-      if (arr && arr.length) return arr;
+  async function listAllSubs(slug, cap) {
+    var bases = ["/rest/contests/" + slug + "/judge_submissions/",
+      "/rest/contests/" + slug + "/submissions"];
+    for (var b = 0; b < bases.length; b++) {
+      var all = [], off = 0;
+      while (all.length < cap) {
+        var n = Math.min(100, cap - all.length);
+        var d = await getJson("https://www.hackerrank.com" + bases[b] + "?offset=" + off + "&limit=" + n);
+        var arr = d && (d.models || d.submissions || d.data || d.results);
+        if (!arr || !arr.length) break;
+        for (var i = 0; i < arr.length; i++) all.push(arr[i]);
+        off += arr.length; if (arr.length < n) break;
+      }
+      if (all.length) return all;
     }
     return [];
   }
-  async function detailSub(slug, s, wantCode) {
-    var id = s.id || s.submission_id || s.submissionId;
-    var base = { challenge: s.challenge_name || s.challenge || s.slug || "",
-      challenge_slug: s.challenge_slug || s.slug || "",
-      language: s.language || "", code: wantCode ? (s.code || s.solution ||
-        s.source || "") : "", score: num(s.score), max_score: num(s.max_score),
-      status: s.status || "", submitted_at: s.created_at || s.createdAt || "" };
-    if (!base.challenge) base.challenge = base.challenge_slug || String(id || "");
-    if (id) {
-      var urls = ["/rest/contests/" + slug + "/submissions/" + id,
-        "/rest/submissions/" + id];
-      for (var i = 0; i < urls.length; i++) {
-        var d = await getJson("https://www.hackerrank.com" + urls[i]);
-        var m = d && (d.model || d.submission || d);
-        if (!m || typeof m !== "object") continue;
-        if (m.code || m.solution || m.source) {
-          base.code = wantCode ? (m.code || m.solution || m.source) : "";
-        }
-        if (m.language) base.language = m.language;
-        if (m.score !== undefined) base.score = num(m.score);
-        if (m.max_score !== undefined) base.max_score = num(m.max_score);
-        if (m.status) base.status = m.status;
-        var tc = m.testcase_results || m.test_cases || m.testcases ||
-          m.results || m.test_case_results;
-        if (tc) { var p = parseTc(tc); base.tc_passed = p[0]; base.tc_total = p[1]; }
-        if (base.code || base.tc_total) break;
-      }
+  async function challengeWeights(slug, arr) {
+    var map = {}, i;
+    for (i = 0; i < arr.length; i++) {
+      var p = parseTc(arr[i].testcase_message || arr[i].testcase_results || []);
+      if (p[1] > 0 && p[0] === p[1]) setMax(map, arr[i], num(arr[i].score));
     }
-    if (base.tc_total === undefined) {
-      var tc2 = s.testcase_results || s.test_cases || s.results;
-      if (tc2) { var q = parseTc(tc2); base.tc_passed = q[0]; base.tc_total = q[1]; }
-      else {
-        base.tc_passed = num(s.testcases_passed, -1);
-        base.tc_total = num(s.testcases_total, -1);
-      }
+    var d = await getJson("https://www.hackerrank.com/rest/contests/" + slug + "/challenges?offset=0&limit=100");
+    var list = d && (d.models || d.challenges || d.data) || [];
+    for (i = 0; i < list.length; i++) {
+      var c = list[i];
+      setMax(map, c, num(c.max_score, num(c.max_points,
+        num(c.points, num(c.score, 0)))));
     }
-    if (base.max_score === 0 && s.maxScore !== undefined) {
-      base.max_score = num(s.maxScore);
+    return map;
+  }
+  function setMax(map, s, mx) {
+    var ch = s.challenge || {};
+    var sl = s.slug || s.challenge_slug || ch.slug || "";
+    if (sl && mx > 0 && (!map[sl] || mx > map[sl].max_score)) map[sl] = { name: s.challenge_name || s.name || s.title || ch.name || sl, max_score: mx };
+  }
+  function ownerKey(s) {
+    var o = s.hacker_username || s.username;
+    if (o) return String(o).toLowerCase();
+    return "id:" + String(s.hacker_id === undefined ? "" : s.hacker_id);
+  }
+  function chalOf(s) {
+    var c = s.challenge;
+    if (c && typeof c === "object") {
+      return { name: c.name || c.title || "",
+        slug: c.slug || c.challenge_slug || "" };
     }
-    return base;
+    return { name: s.challenge_name || (typeof c === "string" ? c : ""),
+      slug: s.challenge_slug || s.slug || "" };
+  }
+  function toIso(v) {
+    if (v === undefined || v === null || v === "") return "";
+    return typeof v !== "number" ? String(v) : new Date(v < 1e12 ? v * 1000 : v).toISOString();
+  }
+  function baseOf(s) {
+    var ch = chalOf(s);
+    var tc = s.testcase_message || s.testcase_results || s.test_cases;
+    var pr = tc ? parseTc(tc) : [-1, -1];
+    return { id: s.id || s.submission_id || s.submissionId,
+      challenge: ch.name || ch.slug || "",
+      challenge_slug: ch.slug || ch.name || "",
+      language: s.language || "", code: "", score: num(s.score),
+      max_score: num(s.max_score, s.maxScore !== undefined ? num(s.maxScore) : 0),
+      status: s.status || "",
+      submitted_at: toIso(s.created_at || s.submitted_at),
+      tc_passed: pr[0], tc_total: pr[1] };
+  }
+  async function attempt(path) {
+    var waits = [1500, 5000, 15000], d = null;
+    for (var t = 0; t <= waits.length; t++) {
+      if (t > 0) await new Promise(function (x) { setTimeout(x, waits[t - 1]); });
+      d = await getJson("https://www.hackerrank.com" + path);
+      if (d || lastStatus !== 429) break;
+    }
+    return d;
+  }
+  async function fillDetail(slug, det, wantCode, weights) {
+    var w = weights[det.challenge_slug];
+    if (det.max_score === 0 && w && w.max_score > 0) det.max_score = w.max_score;
+    det.selisih = det.max_score > 0 ? det.max_score - det.score : null;
+    if (!wantCode || !det.id) return;
+    det.code_errors = [];
+    var d = await attempt("/rest/contests/" + slug + "/submissions/" + det.id);
+    det.code_errors.push(lastStatus);
+    var m = d && (d.model || d.submission || d);
+    if (m && (m.code || m.solution || m.source)) det.code = m.code || m.solution || m.source;
+    var tc = m && (m.testcase_message || m.testcase_results);
+    if (tc) { var p = parseTc(tc); det.tc_passed = p[0]; det.tc_total = p[1]; }
+    if (m && m.display_score !== undefined) det.score = num(m.display_score);
+    await new Promise(function (x) { setTimeout(x, 1200); });
+    if (det.code) delete det.code_errors;
   }
   function parseTc(tc) {
     if (typeof tc === "object" && tc.passed !== undefined) {
       return [num(tc.passed), num(tc.total)];
     }
     if (!tc.length) return [-1, -1];
+    if (typeof tc[0] === "string") {
+      var ok = 0;
+      for (var j = 0; j < tc.length; j++) {
+        if (tc[j].toLowerCase() === "success") ok++;
+      }
+      return [ok, tc.length];
+    }
     var p = 0;
     for (var i = 0; i < tc.length; i++) {
       var t = tc[i];

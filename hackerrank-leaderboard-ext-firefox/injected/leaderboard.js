@@ -23,7 +23,7 @@ async function runLeaderboardScraper(contestSlug, limit, wantRealName) {
       if (rows.length < batch) break;
     }
     if (!models.length) {
-      return { error: "Tidak ada peserta. Pastikan sudah login.", count: 0 };
+      return { error: "Tidak ada peserta. Pastikan sudah login HackerRank di tab ini.", count: 0 };
     }
     var out = new Array(models.length);
     if (wantRealName) {
