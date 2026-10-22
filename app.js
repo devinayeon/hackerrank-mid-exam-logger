@@ -4,6 +4,27 @@
 
 document.addEventListener("DOMContentLoaded", function () {
   var STORAGE_KEY = "hackerrank_uts_audit_data";
+  var VERDICT_STATUSES = { LULUS_UTUH: 1, PERLU_REVIEW_MANUAL: 1, BELUM_LULUS: 1 };
+  function isVerdictStatus(v) {
+    return Object.prototype.hasOwnProperty.call(VERDICT_STATUSES, v);
+  }
+  function normalizeStatus(v) {
+    return isVerdictStatus(v) ? v : "PERLU_REVIEW_MANUAL";
+  }
+  function asNumber(v, fallback) {
+    var n = Number(v);
+    return isFinite(n) ? n : (fallback === undefined ? 0 : fallback);
+  }
+  function hasFullSolveEvidence(list) {
+    if (!Array.isArray(list)) return false;
+    return list.some(function (b) {
+      var tcTotal = asNumber(b.tc_total), tcPassed = asNumber(b.tc_passed);
+      var maxScore = asNumber(b.max_score), score = asNumber(b.score);
+      var accepted = String(b.status || "").toLowerCase().indexOf("accept") >= 0;
+      return accepted && maxScore > 0 && score >= maxScore &&
+        (tcTotal <= 0 || tcPassed === tcTotal);
+    });
+  }
   var activePayload = null;
   var currentFilter = "all";
   var searchKeyword = "";
@@ -278,51 +299,52 @@ document.addEventListener("DOMContentLoaded", function () {
     // Format A: JSON Audit Lengkap ({ contest, students, total_possible, ... })
     if (raw.students && Array.isArray(raw.students)) {
       normalized.contest = raw.contest || "Kontes UTS";
-      normalized.total_possible = raw.total_possible || 100;
+      normalized.total_possible = raw.total_possible != null ? asNumber(raw.total_possible) : null;
       normalized.students = raw.students.map(function (s, idx) {
+        var imp = s.audit;
+        var list = Array.isArray(s.best_per_challenge) ? s.best_per_challenge : [];
+        var flags = imp && Array.isArray(imp.flags) ? imp.flags.slice() : [];
+        var status = imp && isVerdictStatus(imp.status) ? imp.status : "PERLU_REVIEW_MANUAL";
+        var hasEvidence = hasFullSolveEvidence(list);
+        if (status === "LULUS_UTUH" && !hasEvidence) status = "PERLU_REVIEW_MANUAL";
+        if (!imp || !isVerdictStatus(imp.status) ||
+            (status === "PERLU_REVIEW_MANUAL" && !hasEvidence)) {
+          if (flags.indexOf("TANPA_BUKTI_TESTCASE") < 0) flags.push("TANPA_BUKTI_TESTCASE");
+        }
         return {
           rank: s.rank != null ? s.rank : idx + 1,
-          real_name: s.real_name || s.username || "Mahasiswa #" + (idx + 1),
-          username: s.username || "mhs_" + (idx + 1),
-          total_score: s.total_score != null ? s.total_score : (s.score || 0),
-          total_possible: s.total_possible || normalized.total_possible,
-          audit: s.audit || {
-            status: (s.total_score >= 15 ? "LULUS_UTUH" : "BELUM_LULUS"),
-            full_solved_count: s.full_solved || 0,
-            flags: s.flags || []
+          real_name: String(s.real_name || s.username || "Mahasiswa #" + (idx + 1)),
+          username: String(s.username || "mhs_" + (idx + 1)),
+          total_score: asNumber(s.total_score != null ? s.total_score : s.score),
+          total_possible: s.total_possible != null ? asNumber(s.total_possible) : normalized.total_possible,
+          audit: {
+            status: status,
+            full_solved_count: hasEvidence ? asNumber(imp && imp.full_solved_count) : 0,
+            review_count: imp ? asNumber(imp.review_count) : 0,
+            flags: flags
           },
-          best_per_challenge: s.best_per_challenge || []
+          best_per_challenge: list
         };
       });
     }
-    // Format B: Leaderboard Murni (array baris [ { rank, username, score, real_name } ])
+    // Format B: Leaderboard Murni — tanpa bukti testcase/bobot, jangan pernah LULUS_UTUH.
     else if (Array.isArray(raw)) {
-      normalized.contest = "Leaderboard Hasil Scrape";
+      normalized.contest = "Leaderboard Hasil Scrape (perlu review manual)";
+      normalized.total_possible = null;
       normalized.students = raw.map(function (m, idx) {
-        var scoreVal = Number(m.score) || 0;
         return {
           rank: m.rank != null ? m.rank : idx + 1,
-          real_name: m.real_name || m.username || m.hacker || "Mahasiswa #" + (idx + 1),
-          username: m.username || m.hacker || "user_" + (idx + 1),
-          total_score: scoreVal,
-          total_possible: 100,
+          real_name: String(m.real_name || m.username || m.hacker || "Mahasiswa #" + (idx + 1)),
+          username: String(m.username || m.hacker || "user_" + (idx + 1)),
+          total_score: asNumber(m.score),
+          total_possible: null,
           audit: {
-            status: scoreVal >= 15 ? "LULUS_UTUH" : "BELUM_LULUS",
-            full_solved_count: scoreVal >= 15 ? 1 : 0,
-            flags: []
+            status: "PERLU_REVIEW_MANUAL",
+            full_solved_count: 0,
+            review_count: 0,
+            flags: ["TANPA_BUKTI_TESTCASE"]
           },
-          best_per_challenge: [
-            {
-              challenge: "Skor Leaderboard",
-              score: scoreVal,
-              max_score: 100,
-              tc_passed: scoreVal > 0 ? 10 : 0,
-              tc_total: 10,
-              status: scoreVal > 0 ? "Scored" : "Unscored",
-              language: "Leaderboard Mode",
-              code: "# Mode leaderboard saja. Untuk melihat kode sumber tiap soal, gunakan mode 'Submission + audit per peserta'."
-            }
-          ]
+          best_per_challenge: []
         };
       });
     }
@@ -394,11 +416,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var students = activePayload.students || [];
     var filtered = students.filter(function (s) {
-      var status = (s.audit && s.audit.status) || "";
+      var status = normalizeStatus(s.audit && s.audit.status);
       var matchesFilter = currentFilter === "all" || status === currentFilter;
       var matchesSearch =
-        (s.real_name || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        (s.username || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        String(s.real_name || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        String(s.username || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
         status.toLowerCase().includes(searchKeyword.toLowerCase());
       return matchesFilter && matchesSearch;
     });
@@ -426,39 +448,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
     pageItems.forEach(function (s) {
       var tr = document.createElement("tr");
-      var status = (s.audit && s.audit.status) || "BELUM_LULUS";
-      var statusClass = "belum";
-      var statusLabel = status.replace(/_/g, " ");
-
-      if (status === "LULUS_UTUH") {
-        statusClass = "lulus";
-      } else if (status === "PERLU_REVIEW_MANUAL") {
-        statusClass = "review";
-      }
+      var status = normalizeStatus(s.audit && s.audit.status);
+      var statusClass = status === "LULUS_UTUH" ? "lulus" :
+        (status === "PERLU_REVIEW_MANUAL" ? "review" : "belum");
+      var statusLabel = escapeHtml(status.replace(/_/g, " "));
 
       var tcPassed = 0, tcTotal = 0;
-      if (s.best_per_challenge && s.best_per_challenge.length) {
+      if (Array.isArray(s.best_per_challenge)) {
         s.best_per_challenge.forEach(function (b) {
-          tcPassed += (b.tc_passed || 0);
-          tcTotal += (b.tc_total || 0);
+          tcPassed += asNumber(b.tc_passed);
+          tcTotal += asNumber(b.tc_total);
         });
       }
 
-      var tcDisplay = tcTotal > 0 ? (tcPassed + " / " + tcTotal) : "—";
-      var maxDisplay = s.total_possible > 0 ? (" / " + s.total_possible) : "";
+      var tcDisplay = escapeHtml(tcTotal > 0 ? (tcPassed + " / " + tcTotal) : "—");
+      var maxDisplay = asNumber(s.total_possible) > 0 ? (" / " + escapeHtml(s.total_possible)) : "";
 
       // Flag badge preview jika ada
       var flagHtml = "";
-      if (s.audit && s.audit.flags && s.audit.flags.length) {
+      if (s.audit && Array.isArray(s.audit.flags) && s.audit.flags.length) {
         flagHtml = "<div style='font-size:10px; color:#b3261e; font-weight:600; margin-top:2px;'>" +
           escapeHtml(s.audit.flags.join(", ")) + "</div>";
       }
 
       tr.innerHTML =
-        "<td><b>#" + s.rank + "</b></td>" +
+        "<td><b>#" + escapeHtml(s.rank) + "</b></td>" +
         "<td><div style='font-weight:600;'>" + escapeHtml(s.real_name) + "</div>" + flagHtml + "</td>" +
         "<td><span style='color:var(--ink-secondary); font-family:var(--font-mono); font-size:12px;'>@" + escapeHtml(s.username) + "</span></td>" +
-        "<td><b>" + s.total_score + "</b> <span style='color:var(--ink-tertiary);'>" + maxDisplay + "</span></td>" +
+        "<td><b>" + escapeHtml(s.total_score) + "</b> <span style='color:var(--ink-tertiary);'>" + maxDisplay + "</span></td>" +
         "<td>" + tcDisplay + "</td>" +
         "<td><span class='status-badge " + statusClass + "'>" + statusLabel + "</span></td>" +
         "<td><button class='btn-inspect' data-user='" + escapeHtml(s.username) + "'>Inspeksi</button></td>";
@@ -584,7 +601,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!modal) return;
 
     modalCandidateName.textContent = (student.real_name || student.username) + " (@" + student.username + ")";
-    var status = (student.audit && student.audit.status) || "BELUM_LULUS";
+    var status = normalizeStatus(student.audit && student.audit.status);
     modalStatusBadge.textContent = status.replace(/_/g, " ");
     modalStatusBadge.className = "modal-badge " + (status === "LULUS_UTUH" ? "lulus" : (status === "PERLU_REVIEW_MANUAL" ? "review" : "belum"));
 
@@ -735,28 +752,42 @@ document.addEventListener("DOMContentLoaded", function () {
         ["Rank", "Nama Mahasiswa", "Username", "Skor Total", "Bobot Total", "Status", "Flag"]
       ];
       students.forEach(function (s) {
-        var status = (s.audit && s.audit.status) || "";
-        var flags = (s.audit && s.audit.flags) ? s.audit.flags.join(" | ") : "";
+        var status = normalizeStatus(s.audit && s.audit.status);
+        var flags = (s.audit && Array.isArray(s.audit.flags)) ? s.audit.flags.join(" | ") : "";
         csvRows.push([
           s.rank,
-          '"' + (s.real_name || "").replace(/"/g, '""') + '"',
-          s.username,
+          s.real_name || "",
+          s.username || "",
           s.total_score,
           s.total_possible,
           status,
-          '"' + flags.replace(/"/g, '""') + '"'
+          flags
         ]);
       });
-      var csvString = csvRows.map(function (e) { return e.join(","); }).join("\n");
+      var csvString = csvRows.map(function (row) {
+        return row.map(csvCell).join(",");
+      }).join("\r\n");
       var blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url;
-      a.download = (activePayload.contest || "uts_alpro") + "_rekap_audit.csv";
+      var safeContest = String(activePayload.contest || "uts_alpro")
+        .replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 80) || "uts_alpro";
+      a.download = safeContest + "_rekap_audit.csv";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    });
+  }
+
+  var btnClearData = document.getElementById("btnClearData");
+  if (btnClearData) {
+    btnClearData.addEventListener("click", function () {
+      if (!confirm("Hapus data audit yang tersimpan di browser ini? Data contoh akan dimuat ulang. Tindakan ini tidak bisa dibatalkan.")) return;
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* storage unavailable */ }
+      activePayload = null;
+      location.reload();
     });
   }
 
@@ -997,14 +1028,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       item.innerHTML =
         '<div class="item-left">' +
-          '<span class="item-rank">#' + s.rank + '</span>' +
+          '<span class="item-rank">#' + escapeHtml(s.rank) + '</span>' +
           '<div class="item-info">' +
             '<span class="item-name">' + escapeHtml(s.real_name || s.username) + '</span>' +
             '<span class="item-user">@' + escapeHtml(s.username) + '</span>' +
           '</div>' +
         '</div>' +
         '<div class="item-right">' +
-          '<span class="item-score">' + s.total_score + ' pts</span>' +
+          '<span class="item-score">' + escapeHtml(s.total_score) + ' pts</span>' +
           '<span class="item-check">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
               '<polyline points="20 6 9 17 4 12"/>' +
@@ -1114,7 +1145,7 @@ document.addEventListener("DOMContentLoaded", function () {
       inspectorStudentSelect.value = student.username;
     }
 
-    var status = (student.audit && student.audit.status) || "BELUM_LULUS";
+    var status = normalizeStatus(student.audit && student.audit.status);
     var statusLabel = status.replace(/_/g, " ");
     var statusClass = status === "LULUS_UTUH" ? "lulus" : (status === "PERLU_REVIEW_MANUAL" ? "review" : "belum");
 
@@ -1124,8 +1155,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (inspectorScoreDisplay) {
-      var totalPossible = student.total_possible || activePayload.total_possible || 100;
-      inspectorScoreDisplay.textContent = "Skor: " + student.total_score + " / " + totalPossible;
+      var totalPossible = student.total_possible != null
+        ? student.total_possible : activePayload.total_possible;
+      inspectorScoreDisplay.textContent = "Skor: " + student.total_score +
+        (totalPossible != null ? " / " + totalPossible : "");
     }
 
     var challenges = student.best_per_challenge || [];
@@ -1314,8 +1347,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function csvCell(v) {
+    var s = String(v === undefined || v === null ? "" : v);
+    if (/^[=+\-@\t\r\n\uFF1D\uFF0B\uFF0D\uFF20]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
   function escapeHtml(str) {
-    return String(str || "").replace(/[&<>"']/g, function (m) {
+    return String(str === undefined || str === null ? "" : str).replace(/[&<>"']/g, function (m) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m];
     });
   }

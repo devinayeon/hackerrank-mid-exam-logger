@@ -1,5 +1,5 @@
 // audit.js — runs in popup context (not injected). <=200 lines.
-// LULUS_UTUH = minimal 1 soal Accepted (semua testcase+hidden lolos).
+// LULUS_UTUH = minimal 1 soal Accepted + semua testcase lolos + skor maksimum.
 // Bobot soal = skor submission lolos-utuh. Selisih = bobot - diperoleh.
 function auditStudent(bestList) {
   var full = 0, review = 0, flags = [];
@@ -21,9 +21,12 @@ function auditStudent(bestList) {
     status: status, flags: flags };
 }
 function isFullSolved(s) {
-  if (s.tc_total > 0) return s.tc_passed === s.tc_total;
-  if (s.max_score > 0) return s.score >= s.max_score;
-  return isAccepted(s);
+  if (!isAccepted(s)) return false;
+  var max = Number(s.max_score), score = Number(s.score);
+  if (!(max > 0) || !(score >= max)) return false;
+  var total = Number(s.tc_total), passed = Number(s.tc_passed);
+  if (total > 0 && passed !== total) return false;
+  return true;
 }
 function isAccepted(s) {
   return (s.status || "").toLowerCase().indexOf("accept") >= 0;

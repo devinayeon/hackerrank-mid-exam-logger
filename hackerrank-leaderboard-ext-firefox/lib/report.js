@@ -1,7 +1,7 @@
 // report.js — bangun file laporan audit mandiri (HTML+CSS+JS inline).
 // Pure string builder (testable di node). Budget <=200 baris.
 function buildReportHtml(payload) {
-  var data = JSON.stringify(payload).replace(/<\//g, "<\\/");
+  var data = JSON.stringify(payload).replace(/</g, "\\u003c");
   var css = [
     ":root{color-scheme:light dark;--bg:#f2f2f7;--card:#ffffff;--line:#e5e5ea;",
     "--ink:#1c1c1e;--mut:#6e6e73;--acc:#0d9488;--acc-soft:#e6f4f2;}",
@@ -69,16 +69,16 @@ function buildReportHtml(payload) {
     "const list=document.getElementById('list'),main=document.getElementById('main');",
     "const q=document.getElementById('q'),f=document.getElementById('f');",
     "const esc=s=>String(s??'').replace(/[&<>\\x22]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\x22':'&quot;'}[c]));",
-    "const badge=s=>'<span class=\"badge '+s.audit.status+'\">'+s.audit.status.replace(/_/g,' ')+'</span>';",
+    "const badge=s=>{const st=String(s.audit&&s.audit.status||'PERLU_REVIEW_MANUAL');return '<span class=\"badge '+esc(st)+'\">'+esc(st.replace(/_/g,' '))+'</span>'};",
     "const head=s=>'<h2>'+esc(s.real_name)+'</h2><p class=\"meta\"><span>@'+esc(s.username)+'</span>'+badge(s)+'</p>';",
-    "const info=s=>{const a=s.audit;let h='<div class=\"row\"><span>Skor <b>'+s.total_score+'</b>'+(P.total_possible?' / '+P.total_possible:'')+'</span><span>Soal utuh <b>'+a.full_solved_count+'</b></span><span>Rank <b>'+(s.rank??'—')+'</b></span></div>';if(a.flags.length)h+='<div class=\"row\"><span>Flag: <b>'+a.flags.map(esc).join(' | ')+'</b></span></div>';return h};",
-    "const card=b=>{let h='<section class=\"ch\"><h3>'+esc(b.challenge)+'</h3><div class=\"row\"><span>Skor <b>'+b.score+(b.max_score>0?' / '+b.max_score:'')+'</b>'+(b.selisih!=null&&b.max_score>0?' (selisih '+b.selisih+')':'')+'</span><span>Testcase <b>'+b.tc_passed+'/'+b.tc_total+'</b></span><span>Status <b>'+esc(b.status)+'</b></span><span>Bahasa <b>'+esc(b.language)+'</b></span></div>';h+=b.code?'<div><button class=\"copy\" data-c=\"'+b.id+'\">Salin kode</button><pre><code>'+esc(b.code)+'</code></pre></div>':'<p class=\"empty\">Kode tak tersedia (gagal diambil dari HackerRank).</p>';return h+'</section>'};",
-    "const view=s=>{main.innerHTML=head(s)+info(s)+s.best_per_challenge.map(card).join('');main.querySelectorAll('.copy').forEach(x=>{x.onclick=()=>{const b=s.best_per_challenge.find(y=>String(y.id)===x.dataset.c);if(b)navigator.clipboard.writeText(b.code).then(()=>{x.textContent='Tersalin';setTimeout(()=>{x.textContent='Salin kode'},1200)})}})};",
-    "const draw=()=>{const t=q.value.toLowerCase();list.innerHTML='';const rs=P.students.filter(s=>(!f.value||s.audit.status===f.value)&&(s.username+s.real_name).toLowerCase().includes(t));if(!rs.length){list.innerHTML='<p class=\"empty\">Tidak ada mahasiswa.</p>';return}rs.forEach((s,i)=>{const b=document.createElement('button');b.className='stu';b.setAttribute('aria-current',i===0);b.innerHTML='<span class=\"nm\">'+esc(s.real_name)+'</span><span>'+badge(s)+'<span class=\"chev\" aria-hidden=\"true\"> ›</span></span>';b.onclick=()=>{list.querySelectorAll('.stu').forEach(x=>x.setAttribute('aria-current',false));b.setAttribute('aria-current',true);view(s)};list.appendChild(b)});view(rs[0])};",
+    "const info=s=>{const a=s.audit||{};let h='<div class=\"row\"><span>Skor <b>'+esc(s.total_score)+'</b>'+(P.total_possible?' / '+esc(P.total_possible):'')+'</span><span>Soal utuh <b>'+esc(a.full_solved_count)+'</b></span><span>Rank <b>'+esc(s.rank??'—')+'</b></span></div>';if(a.flags&&a.flags.length)h+='<div class=\"row\"><span>Flag: <b>'+a.flags.map(esc).join(' | ')+'</b></span></div>';return h};",
+    "const card=b=>{let h='<section class=\"ch\"><h3>'+esc(b.challenge)+'</h3><div class=\"row\"><span>Skor <b>'+esc(b.score)+(b.max_score>0?' / '+esc(b.max_score):'')+'</b>'+(b.selisih!=null&&b.max_score>0?' (selisih '+esc(b.selisih)+')':'')+'</span><span>Testcase <b>'+esc(b.tc_passed)+'/'+esc(b.tc_total)+'</b></span><span>Status <b>'+esc(b.status)+'</b></span><span>Bahasa <b>'+esc(b.language)+'</b></span></div>';h+=b.code?'<div><button class=\"copy\" data-c=\"'+esc(b.id)+'\">Salin kode</button><pre><code>'+esc(b.code)+'</code></pre></div>':'<p class=\"empty\">Kode tak tersedia (gagal diambil dari HackerRank).</p>';return h+'</section>'};",
+    "const view=s=>{const bs=s.best_per_challenge||[];main.innerHTML=head(s)+info(s)+bs.map(card).join('');main.querySelectorAll('.copy').forEach(x=>{x.onclick=()=>{const b=bs.find(y=>String(y.id)===x.dataset.c);if(b)navigator.clipboard.writeText(b.code).then(()=>{x.textContent='Tersalin';setTimeout(()=>{x.textContent='Salin kode'},1200)})}})};",
+    "const draw=()=>{const t=q.value.toLowerCase();list.innerHTML='';const rs=(P.students||[]).filter(s=>(!f.value||(s.audit&&s.audit.status)===f.value)&&(String(s.username||'')+String(s.real_name||'')).toLowerCase().includes(t));if(!rs.length){list.innerHTML='<p class=\"empty\">Tidak ada mahasiswa.</p>';return}rs.forEach((s,i)=>{const b=document.createElement('button');b.className='stu';b.setAttribute('aria-current',i===0);b.innerHTML='<span class=\"nm\">'+esc(s.real_name)+'</span><span>'+badge(s)+'<span class=\"chev\" aria-hidden=\"true\"> ›</span></span>';b.onclick=()=>{list.querySelectorAll('.stu').forEach(x=>x.setAttribute('aria-current',false));b.setAttribute('aria-current',true);view(s)};list.appendChild(b)});view(rs[0])};",
     "q.oninput=draw;f.onchange=draw;draw();"
   ].join("\n");
-  var nL = payload.students.filter(function (s) {
-    return s.audit.status === "LULUS_UTUH";
+  var nL = (payload.students || []).filter(function (s) {
+    return s.audit && s.audit.status === "LULUS_UTUH";
   }).length;
   return "<!DOCTYPE html><html lang=\"id\"><head><meta charset=\"UTF-8\">" +
     "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
@@ -89,7 +89,7 @@ function buildReportHtml(payload) {
     "<a class=\"skip\" href=\"#main\">Lewati ke hasil</a>" +
     "<header>" +
     "<h1>Laporan Audit " + escHtml(payload.contest) + "</h1>" +
-    "<div class=\"meta\"><span>Peserta <b>" + payload.students.length +
+    "<div class=\"meta\"><span>Peserta <b>" + (payload.students || []).length +
     "</b></span><span>Lulus utuh <b>" + nL + "</b></span>" +
     "<span>Total submission <b>" + payload.submission_total_visible +
     "</b></span><span>Dibuat <b>" + escHtml(payload.generated_at) +

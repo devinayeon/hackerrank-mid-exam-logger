@@ -24,5 +24,6 @@ npm-debug.log*
 # Scraped output & audit artifacts (temporary test files)
 *_submissions_audit.json
 *_rekap_audit.csv
+*_laporan_audit.html
 *_leaderboard_clean.json
 scratch/

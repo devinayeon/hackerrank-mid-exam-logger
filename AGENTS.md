@@ -58,7 +58,8 @@ hiasan (hanya log + handler PING tanpa pengirim).
   sama persis dengan yang diunduh, lalu `downloadText(..., "text/html")`.
   Jadi HTML, JSON, dan CSV **selalu konsisten** karena lahir dari objek yang sama.
 * File mandiri: CSS + JS inline, **nol request eksternal** (teruji), data
-  tertanam sebagai `<script type="application/json">` (tanda `<\/` di-escape).
+  tertanam sebagai `<script type="application/json">` (karakter `<` di-escape
+  sebagai `\u003c` agar tidak bisa menutup blok data).
 * Alur pakai (sengaja minimal): daftar mahasiswa di kiri (cari nama +
   filter status) -> klik nama -> header status lengkap (skor/total, soal utuh,
   rank, flag) + kartu per soal UTS (skor/bobot, selisih, testcase, status,
@@ -70,8 +71,8 @@ hiasan (hanya log + handler PING tanpa pengirim).
 ## 4. Mekanisme audit yang diinginkan pemilik
 
 * `LULUS_UTUH` = minimal 1 soal `Accepted` (di HackerRank berarti semua
-  testcase + hidden lolos). Tanpa bukti tc/maks → `PERLU_REVIEW_MANUAL`,
-  bukan lulus. Tanpa itu semua → `BELUM_LULUS`.
+  testcase + hidden lolos) **dan** skor soal itu mencapai maksimum. Tanpa bukti
+  tc/maks → `PERLU_REVIEW_MANUAL`, bukan lulus. Tanpa itu semua → `BELUM_LULUS`.
 * Bobot soal = skor saat diselesaikan utuh (contoh resmi kontes: Ejak 15,
   Layanan 20, Nilai 20, Rabbit 20, Segitiga 25; total 100). `selisih` =
   bobot − skor diperoleh, per soal dan per mahasiswa (`selisih_total`).
@@ -81,6 +82,8 @@ hiasan (hanya log + handler PING tanpa pengirim).
   `HANYA_PRINT` (ada cetak tanpa logika), `SEBAGIAN_TC_LOLOS` (sampel lolos,
   hidden gagal), `TANPA_KODE`, `KODE_GAGAL_DIAMBIL` (kegagalan fetcher + isi
   `code_errors` berisi status HTTP, BUKAN vonis ke mahasiswa).
+* Flag khusus studio saat impor tanpa bukti testcase/bobot:
+  `TANPA_BUKTI_TESTCASE` (status wajib `PERLU_REVIEW_MANUAL`, bukan lulus).
 * Verifikasi yang pernah dilakukan: jumlah best per mahasiswa = skor leaderboard
   (cth. 0+25+20+20+12 = 77); pola print-hack (`print("Bukan yang ini. SKIP!")`
   skor 13/20, `print("   x")...` skor 1/15, `print(2)` skor 12/20) tertangkap

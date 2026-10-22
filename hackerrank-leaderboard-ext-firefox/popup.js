@@ -111,14 +111,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
     payload.total_possible = totalPossible;
     payload.audit_rule = "LULUS_UTUH = minimal 1 soal Accepted " +
-      "(semua testcase termasuk hidden lolos). Bobot soal = skor saat " +
-      "diselesaikan utuh; selisih = bobot - skor diperoleh.";
+      "(semua testcase termasuk hidden lolos) DAN skor maksimum soal. " +
+      "Bobot soal = skor saat diselesaikan utuh; selisih = bobot - skor diperoleh.";
     progBar.style.width = "90%";
     await scripting.executeScript({ target: { tabId: tab.id },
       func: triggerDownload,
       args: [JSON.stringify(payload, null, 2), sd.filename] });
     downloadText(toRecapCsv(recap, order),
       (slug || "global") + "_rekap_audit.csv", "text/csv");
+    downloadText(buildReportHtml(payload),
+      (slug || "global") + "_laporan_audit.html", "text/html");
     var n = recap.filter(function (x) { return x.status === "LULUS_UTUH"; }).length;
     progBar.style.width = "100%";
     uiLog(logArea, "success", "Audit " + recap.length + " mahasiswa: " +

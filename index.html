@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Hanya skrip milik sendiri yang boleh berjalan; impor JSON tidak bisa mengeksekusi kode. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <title>HackerRank Auditor UTS — Penguji Ujian Algoritma &amp; Pemrograman</title>
   <meta name="description" content="Sistem audit dan scraper otomatis ujian coding HackerRank untuk mata kuliah Algoritma dan Pemrograman. Verifikasi syarat kelulusan LULUS_UTUH, deteksi print-hack, dan ekspor rekap nilai seketika." />
   
@@ -247,6 +249,12 @@
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                         </svg>
                         <span>Ekspor CSV Rekap</span>
+                      </button>
+                      <button class="btn-action-sm btn-ghost" id="btnClearData" title="Hapus data audit yang tersimpan di browser ini">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/>
+                        </svg>
+                        <span>Hapus Data</span>
                       </button>
                     </div>
                   </div>
