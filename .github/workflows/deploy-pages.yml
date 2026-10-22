@@ -23,15 +23,15 @@ jobs:
 
       - name: Create ZIP Archives for Extensions
         run: |
-          mkdir -p dist
-          zip -r dist/hackerrank-scrapper-chrome.zip hackerrank-leaderboard-ext-chrome/
-          zip -r dist/hackerrank-scrapper-firefox.zip hackerrank-leaderboard-ext-firefox/
+          mkdir -p artifacts
+          zip -r artifacts/hackerrank-scrapper-chrome.zip hackerrank-leaderboard-ext-chrome/
+          zip -r artifacts/hackerrank-scrapper-firefox.zip hackerrank-leaderboard-ext-firefox/
 
       - name: Upload Extension Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: browser-extensions
-          path: dist/*.zip
+          path: artifacts/*.zip
           retention-days: 90
 
   # Job 2: Deploy Frontend to GitHub Pages
@@ -48,10 +48,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Stage Static Site (allowlist)
-        run: |
-          mkdir -p _site
-          cp index.html app.js styles.css .nojekyll _site/
+      - name: Build Static Site (allowlist)
+        run: node scripts/build-site.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -59,7 +57,7 @@ jobs:
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: 'dist'
 
       - name: Deploy to GitHub Pages
         id: deployment

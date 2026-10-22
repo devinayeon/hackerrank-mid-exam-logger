@@ -3,21 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Hanya skrip milik sendiri yang boleh berjalan; impor JSON tidak bisa mengeksekusi kode. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <!-- Hanya sumber milik sendiri; impor JSON tidak bisa mengeksekusi kode. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#ffffff" />
   <title>HackerRank Auditor UTS — Penguji Ujian Algoritma &amp; Pemrograman</title>
   <meta name="description" content="Sistem audit dan scraper otomatis ujian coding HackerRank untuk mata kuliah Algoritma dan Pemrograman. Verifikasi syarat kelulusan LULUS_UTUH, deteksi print-hack, dan ekspor rekap nilai seketika." />
-  
-  <!-- Font Sistem & Modern Preconnect -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  
-  <!-- Base URL & Explicit Relative Paths for GitHub Pages -->
+  <link rel="canonical" href="https://nayeonworks.tech/" />
+  <meta property="og:title" content="HackerRank Auditor UTS" />
+  <meta property="og:description" content="Audit hasil ujian coding HackerRank: verifikasi LULUS_UTUH, deteksi print-hack, dan rekap CSV." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://nayeonworks.tech/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+  <!-- Base URL & Explicit Relative Paths for GitHub Pages / Cloudflare Pages -->
   <base href="./" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+
+  <a class="skip-link" href="#mainContent">Lewati ke konten utama</a>
+  <noscript>
+    <p class="noscript">Dashboard ini memerlukan JavaScript untuk membaca data audit dan menampilkan tabel. Aktifkan JavaScript, lalu muat ulang halaman.</p>
+  </noscript>
 
   <!-- Background Ambient Glow -->
   <div class="ambient-glow glow-top" aria-hidden="true"></div>
@@ -57,7 +67,7 @@
   <!-- ========================================================= -->
   <!-- HERO SECTION                                              -->
   <!-- ========================================================= -->
-  <main>
+  <main id="mainContent" tabindex="-1">
     <section class="hero-section" id="hero">
       <div class="container hero-container">
         
@@ -236,7 +246,7 @@
                         </svg>
                         <span>Impor Scraped JSON</span>
                       </label>
-                      <input type="file" id="jsonFileInput" accept=".json,.html" style="display: none;" />
+                      <input type="file" id="jsonFileInput" accept=".json,application/json" style="display: none;" />
 
                       <button class="btn-action-sm" id="btnSimulate">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -278,7 +288,7 @@
                           <circle cx="11" cy="11" r="8"/>
                           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
-                        <input type="text" id="filterInput" placeholder="Cari nama mahasiswa atau username..." />
+                        <input type="search" id="filterInput" placeholder="Cari nama mahasiswa atau username..." aria-label="Cari nama mahasiswa atau username" autocomplete="off" />
                       </div>
                       <div class="filter-pills">
                         <button class="filter-pill active" data-filter="all">Semua (5)</button>
@@ -616,7 +626,7 @@
             </div>
           </div>
 
-          <!-- Bento Card 3: 3 Berkas Sekali Klik -->
+          <!-- Bento Card 3: 2 Berkas Sekali Klik -->
           <div class="bento-card">
             <div class="bento-card-visual">
               <div class="mockup-journey">
@@ -645,27 +655,15 @@
                     <span class="step-time">CSV</span>
                   </div>
 
-                  <div class="journey-connector"></div>
-
-                  <div class="journey-step">
-                    <div class="step-icon-wrap icon-paid">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    </div>
-                    <div class="step-info">
-                      <div class="step-title">{slug}_laporan_audit.html</div>
-                      <div class="step-route">Laporan interaktif mandiri, nol request eksternal</div>
-                    </div>
-                    <span class="step-time">HTML</span>
-                  </div>
                 </div>
               </div>
             </div>
 
             <div class="bento-card-meta">
               <span class="bento-category">EKSPOR KONSISTEN</span>
-              <h3 class="bento-title">3 Berkas Sekali Download</h3>
+              <h3 class="bento-title">2 Berkas Sekali Download</h3>
               <p class="bento-desc">
-                JSON audit, CSV rekapitulasi, dan laporan HTML interaktif dilahirkan serempak dari objek payload yang sama. Tanpa diskrepansi angka atau data.
+                JSON audit dan CSV rekapitulasi dilahirkan dari objek payload yang sama. Tanpa diskrepansi angka atau data, tanpa laporan HTML terpisah.
               </p>
             </div>
           </div>
@@ -801,10 +799,9 @@
             </button>
             <div class="faq-answer">
               <p>
-                Setelah audit selesai, ekstensi secara otomatis mengunduh 3 berkas yang konsisten:
+                Setelah audit selesai, ekstensi secara otomatis mengunduh 2 berkas yang konsisten:
                 <br />1. <strong>{slug}_submissions_audit.json</strong>: Data mentah seluruh mahasiswa, submission terbaik, dan bobot soal.
                 <br />2. <strong>{slug}_rekap_audit.csv</strong>: Tabel rekap nilai Excel berisi skor per soal, selisih bobot, flag, dan status kelulusan.
-                <br />3. <strong>{slug}_laporan_audit.html</strong>: Dasbor laporan interaktif mandiri (nol request eksternal) dengan daftar mahasiswa, filter status, dan peninjau kode.
               </p>
             </div>
           </div>
@@ -842,7 +839,7 @@
             <div class="step-num">03</div>
             <h3 class="step-title">Unduh Rekap Otomatis</h3>
             <p class="step-desc">
-              Klik <b>Download</b>. Ekstensi akan men-scrape data, melakukan audit <i>LULUS_UTUH</i>, dan mengunduh berkas JSON, CSV Rekap, serta Laporan HTML siap pakai.
+              Klik <b>Download</b>. Ekstensi akan men-scrape data, melakukan audit <i>LULUS_UTUH</i>, dan mengunduh berkas JSON serta CSV Rekap siap pakai.
             </p>
           </div>
         </div>
@@ -918,7 +915,7 @@
         <div class="footer-col">
           <span class="footer-heading">DOKUMENTASI</span>
           <a href="#faq">FAQ Penguji</a>
-          <a href="https://developer.apple.com/design/" target="_blank" rel="noopener">Apple Design Principles</a>
+          <a href="https://developer.apple.com/design/" target="_blank" rel="noopener noreferrer">Apple Design Principles</a>
           <a href="#hero">Kembali ke Atas</a>
         </div>
       </div>

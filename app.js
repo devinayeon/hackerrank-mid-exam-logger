@@ -1,9 +1,10 @@
 // app.js — HackerRank UTS Alpro Audit Studio & Data Ingestion
 // Menyelaraskan 100% dengan konteks AGENTS.md (UTS Algoritma & Pemrograman)
-// Mendukung drag-and-drop & unggah file JSON/HTML hasil scraping nyata
+// Mendukung drag-and-drop & unggah file JSON hasil scraping nyata
 
 document.addEventListener("DOMContentLoaded", function () {
   var STORAGE_KEY = "hackerrank_uts_audit_data";
+  var MAX_IMPORT_BYTES = 25 * 1024 * 1024;
   var VERDICT_STATUSES = { LULUS_UTUH: 1, PERLU_REVIEW_MANUAL: 1, BELUM_LULUS: 1 };
   function isVerdictStatus(v) {
     return Object.prototype.hasOwnProperty.call(VERDICT_STATUSES, v);
@@ -673,66 +674,60 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // -------------------------------------------------------------
-  // Unggah File JSON / HTML Laporan Scrape dari Komputer
+  // Unggah / drag-and-drop JSON hasil scrape dari komputer
   // -------------------------------------------------------------
+  function ingestAuditFile(file) {
+    if (!file) return;
+    if (!/\.json$/i.test(file.name)) {
+      alert("Gunakan berkas JSON hasil scrape ekstensi (mis. uts_submissions_audit.json).");
+      return;
+    }
+    if (file.size > MAX_IMPORT_BYTES) {
+      alert("Berkas terlalu besar. Maksimal 25 MB.");
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+      try {
+        var parsed = JSON.parse(String(evt.target.result || ""));
+        if (!parsed || (!Array.isArray(parsed) && !Array.isArray(parsed.students))) {
+          throw new Error("Struktur data tidak dikenali. Gunakan JSON audit hasil ekstensi.");
+        }
+        loadScrapedPayload(parsed, true);
+        alert("Berhasil memuat data audit dari: " + file.name + " (" + activePayload.students.length + " mahasiswa)");
+      } catch (err) {
+        alert("Gagal memuat berkas audit: " + err.message);
+      } finally {
+        if (jsonFileInput) jsonFileInput.value = "";
+      }
+    };
+    reader.onerror = function () {
+      alert("Berkas gagal dibaca. Coba lagi.");
+      if (jsonFileInput) jsonFileInput.value = "";
+    };
+    reader.readAsText(file);
+  }
+
   if (jsonFileInput) {
     jsonFileInput.addEventListener("change", function (e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      var reader = new FileReader();
-      reader.onload = function (evt) {
-        try {
-          var content = evt.target.result;
-          var parsed;
-
-          // Ekstrak data JSON tertanam jika mengunggah file _laporan_audit.html
-          if (file.name.endsWith(".html") || content.includes('id="d" type="application/json"')) {
-            var match = content.match(/<script id="d" type="application\/json">([\s\S]*?)<\/script>/);
-            if (match && match[1]) {
-              parsed = JSON.parse(match[1]);
-            } else {
-              throw new Error("Tidak menemukan data JSON audit di dalam berkas HTML.");
-            }
-          } else {
-            parsed = JSON.parse(content);
-          }
-
-          loadScrapedPayload(parsed, true);
-          alert("Berhasil memuat data audit ujian dari: " + file.name + " (" + activePayload.students.length + " mahasiswa)");
-        } catch (err) {
-          alert("Gagal mem-parse berkas hasil audit: " + err.message);
-        }
-      };
-      reader.readAsText(file);
+      ingestAuditFile(e.target.files && e.target.files[0]);
     });
   }
 
-  // Drag and drop JSON ke area dashboard card
   if (dashboardCard) {
     dashboardCard.addEventListener("dragover", function (e) {
       e.preventDefault();
       dashboardCard.style.outline = "2px dashed var(--apple-blue)";
     });
-    dashboardCard.addEventListener("dragleave", function (e) {
+    dashboardCard.addEventListener("dragleave", function () {
       dashboardCard.style.outline = "";
     });
     dashboardCard.addEventListener("drop", function (e) {
       e.preventDefault();
       dashboardCard.style.outline = "";
       if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-        var file = e.dataTransfer.files[0];
-        var reader = new FileReader();
-        reader.onload = function (evt) {
-          try {
-            var parsed = JSON.parse(evt.target.result);
-            loadScrapedPayload(parsed, true);
-            alert("Berhasil memuat berkas hasil audit!");
-          } catch (err) {
-            alert("Gagal membaca file JSON: " + err.message);
-          }
-        };
-        reader.readAsText(file);
+        ingestAuditFile(e.dataTransfer.files[0]);
       }
     });
   }
@@ -833,7 +828,7 @@ document.addEventListener("DOMContentLoaded", function () {
         { pct: "25%", label: "Leaderboard terambil (84 mahasiswa terindeks)..." },
         { pct: "60%", label: "Memproses submission per mahasiswa (pacing 1.2s)..." },
         { pct: "85%", label: "Memeriksa syarat LULUS_UTUH & mendeteksi pola print-hack..." },
-        { pct: "100%", label: "Selesai! Laporan audit, JSON, dan CSV rekap nilai siap." }
+        { pct: "100%", label: "Selesai! JSON audit dan CSV rekap nilai siap diunduh." }
       ];
 
       var stepIdx = 0;

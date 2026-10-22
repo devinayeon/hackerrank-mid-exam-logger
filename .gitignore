@@ -21,6 +21,10 @@ venv/
 node_modules/
 npm-debug.log*
 
+# Build output situs statis
+dist/
+_site/
+
 # Scraped output & audit artifacts (temporary test files)
 *_submissions_audit.json
 *_rekap_audit.csv

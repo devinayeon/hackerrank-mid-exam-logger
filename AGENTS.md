@@ -21,7 +21,7 @@
 ## 2. Arsitektur dan alur data
 
 ```
-popup.html (+ lib/ui.js, lib/audit.js, lib/download.js, lib/report.js,
+popup.html (+ lib/ui.js, lib/audit.js, lib/download.js,
              injected/leaderboard.js, injected/submissions.js, popup.js)
   -> popup.js deteksi tab + slug kontes dari URL
   -> mode "leaderboard": executeScript(runLeaderboardScraper)
@@ -41,9 +41,8 @@ popup.html (+ lib/ui.js, lib/audit.js, lib/download.js, lib/report.js,
            HANYA untuk kandidat best: GET /rest/contests/{slug}/submissions/{id}
            (pola ini yang terbukti; judge_submissions/{id} 404)
         -> pacing anti-throttle: 1 worker, jeda 1.2 dtk, backoff 1.5/5/15 dtk khusus 429
-     3. popup.js: auditStudent() per mahasiswa, bangun rekap CSV + laporan HTML
-     -> unduh 3 file: {slug}_submissions_audit.json, {slug}_rekap_audit.csv,
-        {slug}_laporan_audit.html
+     3. popup.js: auditStudent() per mahasiswa, bangun rekap CSV
+     -> unduh 2 file: {slug}_submissions_audit.json, {slug}_rekap_audit.csv
 ```
 
 Fungsi `run*Scraper`/`triggerDownload` wajib **self-contained** (tanpa import):
@@ -51,22 +50,19 @@ mereka diserialisasi `scripting.executeScript({func})` ke konteks halaman dan
 berjalan dengan cookie login penguji. `content.js`/`background.js` praktis
 hiasan (hanya log + handler PING tanpa pengirim).
 
-## 3. Bagaimana HTML keluar dan mengapa terhubung ke scraping
+## 3. Output extension dan website statis
 
-* `lib/report.js` mengekspor satu fungsi murni: `buildReportHtml(payload)` ->
-  string HTML utuh. `popup.js` memanggilnya dengan `payload` JSON audit yang
-  sama persis dengan yang diunduh, lalu `downloadText(..., "text/html")`.
-  Jadi HTML, JSON, dan CSV **selalu konsisten** karena lahir dari objek yang sama.
-* File mandiri: CSS + JS inline, **nol request eksternal** (teruji), data
-  tertanam sebagai `<script type="application/json">` (karakter `<` di-escape
-  sebagai `\u003c` agar tidak bisa menutup blok data).
-* Alur pakai (sengaja minimal): daftar mahasiswa di kiri (cari nama +
-  filter status) -> klik nama -> header status lengkap (skor/total, soal utuh,
-  rank, flag) + kartu per soal UTS (skor/bobot, selisih, testcase, status,
-  bahasa) + blok kode + tombol Salin kode.
+* Extension **tidak lagi membuat laporan HTML**. Outputnya hanya JSON audit dan
+  CSV rekap; `lib/report.js` sudah dihapus dari kedua varian.
+* Website statis (`index.html` + `app.js` + `styles.css`) adalah viewer/auditor
+  lokal: impor JSON hasil scrape, tabel mahasiswa, inspeksi kode, ekspor CSV.
+  Tidak ada backend dan tidak ada request jaringan saat halaman dibuka.
+* `scripts/build-site.js` menyalin allowlist ke `dist/` untuk Cloudflare Pages
+  atau GitHub Pages. `_headers` mengatur CSP dan header keamanan (hanya dibaca
+  Cloudflare Pages; GitHub Pages mengabaikannya).
 * Desain mengikuti Apple HIG (font sistem, large title, inset grouped list,
-  target sentuh 44px, terang+gelap) dengan filter anti-slop (tanpa gradien,
-  glow, emoji, klaim fabrikasi; semua angka dari data nyata).
+  target sentuh 44px) dengan filter anti-slop (tanpa gradien, glow, emoji,
+  klaim fabrikasi; semua angka dari data nyata).
 
 ## 4. Mekanisme audit yang diinginkan pemilik
 
@@ -98,9 +94,9 @@ hiasan (hanya log + handler PING tanpa pengirim).
    `popup-components.css` (216) — wajib dipecah ulang saat menyentuh CSS.
 2. **Mirror Chrome -> Firefox** setiap mengubah file bersama; lalu
    `node --check` semua file JS yang diubah.
-3. **Verifikasi sebelum lapor selesai**: `node --check` + uji render
-   (`buildReportHtml` dengan payload sampel: JSON tertanam utuh & ter-parse,
-   inline JS valid, tanpa URL eksternal).
+3. **Verifikasi sebelum lapor selesai**: `node --check` + `node scripts/build-site.js`
+   + uji halaman `dist/` (CSP aktif, impor JSON aman, ekspor CSV, tanpa URL
+   eksternal).
 4. Jangan menebak URL endpoint HackerRank: satu URL persis dari Network tab
    (Request URL + cuplikan respons) mengalahkan semua tebakan. Endpoint yang
    terbukti: `judge_submissions/` (list, admin), `submissions/{id}` (detail
@@ -111,4 +107,4 @@ hiasan (hanya log + handler PING tanpa pengirim).
    paralelisme tanpa backoff; catat status ke `code_errors`, jangan diam.
 6. Bahasa UI: Indonesia yang eksplisit (tanpa singkatan ambigu); status/flag
    adalah kontrak data — ganti nama hanya serentak di `audit.js`, CSV, dan
-   laporan.
+   website.

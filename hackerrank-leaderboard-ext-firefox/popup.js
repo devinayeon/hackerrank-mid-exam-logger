@@ -119,8 +119,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       args: [JSON.stringify(payload, null, 2), sd.filename] });
     downloadText(toRecapCsv(recap, order),
       (slug || "global") + "_rekap_audit.csv", "text/csv");
-    downloadText(buildReportHtml(payload),
-      (slug || "global") + "_laporan_audit.html", "text/html");
     var n = recap.filter(function (x) { return x.status === "LULUS_UTUH"; }).length;
     progBar.style.width = "100%";
     uiLog(logArea, "success", "Audit " + recap.length + " mahasiswa: " +
